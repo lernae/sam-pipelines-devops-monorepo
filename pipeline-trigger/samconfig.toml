@@ -1,0 +1,12 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "pipeline-trigger"
+s3_prefix = "pipeline-trigger"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1hndhir8ozcp5"
+profile = "cicd"
+confirm_changeset = true
