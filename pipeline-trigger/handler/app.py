@@ -32,11 +32,7 @@ def lambda_handler(event, context):
 def start_code_pipeline(pipelineName):
     client = codepipeline_client()
     print('starting pipeline ',pipelineName)
-    response = client.start_pipeline_execution(name=pipelineName, parameter_overrides=[{
-        'name': 'SUB_FOLDER_NAME',
-        'value': pipelineName,
-        'type': 'PLAINTEXT'
-    }])
+    response = client.start_pipeline_execution(name=pipelineName)
     print('start_pipeline_execution response ',response)
     return True
 
