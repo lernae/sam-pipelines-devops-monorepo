@@ -27,6 +27,10 @@ Description: >
 
 
 Parameters:
+  ResourceType:
+    Type: String
+    Description: The type of the resource
+    Default: "lambda"
   SubFolderName:
     Type: String
     Description: The sub project folder name
@@ -34,9 +38,12 @@ Parameters:
   GitProviderType:
     Type: String
     Default: "GitHub"
-  FullRepositoryId:
+  AppFullRepositoryId:
     Type: String
-    Default: "lernae/sam-pipelines-monorepo"
+    Default: "lernae/sam-pipelines-appdev-monorepo"
+  DevOpsFullRepositoryId:
+    Type: String
+    Default: "lernae/sam-pipelines-devops-monorepo"
   MainGitBranch:
     Type: String
     Default: "common-pipeline"
@@ -120,6 +127,7 @@ Resources:
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
+      Name: !Ref SubFolderName
       ArtifactStore:
         Location: !Ref PipelineArtifactsBucket
         Type: S3
@@ -128,7 +136,7 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: SourceCodeRepo
+            - Name: SourceCodeRepoApp
               ActionTypeId:
                 Category: Source
                 Owner: AWS
@@ -136,10 +144,23 @@ Resources:
                 Version: "1"
               Configuration:
                 ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
-                FullRepositoryId: !Ref FullRepositoryId
+                FullRepositoryId: !Ref AppFullRepositoryId
                 BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
               OutputArtifacts:
-                - Name: SourceCodeAsZip
+                - Name: SourceCodeAsZipApp
+              RunOrder: 1
+            - Name: SourceCodeRepoDevOps
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: "1"
+              Configuration:
+                ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
+                FullRepositoryId: !Ref DevOpsFullRepositoryId
+                BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+              OutputArtifacts:
+                - Name: SourceCodeAsZipDevOps
               RunOrder: 1
         - Name: UpdatePipeline
           Actions:
@@ -154,7 +175,7 @@ Resources:
                 RoleArn: !GetAtt PipelineStackCloudFormationExecutionRole.Arn
                 StackName: !Ref AWS::StackName
                 ChangeSetName: !Sub ${AWS::StackName}-ChangeSet
-                TemplatePath: SourceCodeAsZip::codepipeline.yaml
+                TemplatePath: SourceCodeAsZipDevOps::codepipeline.yaml
                 Capabilities: CAPABILITY_NAMED_IAM
                 ParameterOverrides: !Sub |
                   {
@@ -163,7 +184,7 @@ Resources:
                     "SubFolderName": "${SubFolderName}"
                   }
               InputArtifacts:
-                - Name: SourceCodeAsZip
+                - Name: SourceCodeAsZipDevOps
               RunOrder: 1
             - Name: ExecuteChangeSet
               ActionTypeId:
@@ -207,7 +228,7 @@ Resources:
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectBuildAndDeployFeature
                 InputArtifacts:
-                  - Name: SourceCodeAsZip
+                  - Name: SourceCodeAsZipApp
           - !Ref AWS::NoValue
 
         - !If
@@ -223,7 +244,7 @@ Resources:
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectBuildAndPackage
                 InputArtifacts:
-                  - Name: SourceCodeAsZip
+                  - Name: SourceCodeAsZipApp
                 OutputArtifacts:
                   - Name: BuildArtifactAsZip
           - !Ref AWS::NoValue
@@ -621,7 +642,7 @@ Resources:
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: CODEPIPELINE
-        BuildSpec: pipeline/buildspec_build_package.yml
+        BuildSpec: pipeline/buildspec_create_pipeline.yml
 
   # Uncomment and modify the following step for running the integration tests
   # CodeBuildProjectIntegrationTest:

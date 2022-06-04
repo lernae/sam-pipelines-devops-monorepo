@@ -10,7 +10,71 @@ Globals:
   Function:
     Timeout: 3
 
+Parameters:
+  PipelineName:
+    Type: String
+    Description: The name of the pipeline to create
+    Default: "projectA"
+
 Resources:
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Tags:
+        - Key: Role
+          Value: aws-sam-pipeline-codebuild-service-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+      Policies:
+        - PolicyName: CodeBuildLogs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*"
+#        - PolicyName: CodeBuildArtifactsBucket
+#          PolicyDocument:
+#            Version: "2012-10-17"
+#            Statement:
+#              - Effect: Allow
+#                Action:
+#                  - "s3:GetObject"
+#                  - "s3:GetObjectVersion"
+#                  - "s3:PutObject"
+#                Resource:
+#                  - !Sub "arn:aws:s3:::${PipelineArtifactsBucket}/*"
+        - PolicyName: AssumeStagePipExecutionRoles
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - sts:AssumeRole
+                Effect: Allow
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/Role: pipeline-execution-role
+        - PolicyName: CreatePipeline
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "codepipeline:CreatePipeline"
+                Resource:
+                  - "arn:aws:codepipeline:::*"
   PipelineTriggerFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -25,6 +89,7 @@ Resources:
           Effect: Allow
           Action:
           - codepipeline:*
+          - codebuild:*
           Resource: '*'
       Events:
         PipelineTrigger:
@@ -32,6 +97,24 @@ Resources:
           Properties:
             Path: /
             Method: post
+  PipelineTriggerCreatePipelineTask:
+    Type: AWS::CodeBuild::Project # More info about this Resource: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-codebuild-project.html
+    Properties:
+      Name: create_pipeline
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: ENV_PIPELINE_NAME
+            Value: !Ref PipelineName
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n#      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - echo \"sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME}-pipeline --capabilities=CAPABILITY_IAM\""
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
