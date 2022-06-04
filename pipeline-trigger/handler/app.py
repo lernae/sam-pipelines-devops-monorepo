@@ -36,7 +36,7 @@ def create_pipeline(pipelineName):
     response = client.start_build(projectName='create_pipeline',
                                   environmentVariablesOverride=[
                                         {
-                                            'name': 'PipelineName',
+                                            'name': 'PIPELINE_NAME',
                                             'value': pipelineName,
                                             'type': 'PLAINTEXT'
                                         }

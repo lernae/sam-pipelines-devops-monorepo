@@ -114,7 +114,7 @@ Resources:
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: NO_SOURCE
-        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n#      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - echo \"sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME}-pipeline --capabilities=CAPABILITY_IAM\""
+        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n#      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - echo \"sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME}-pipeline --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=ResourceType,ParameterValue=\"${ENV_RESOURCE_TYPE}\" ParameterKey=SubFolderName,ParameterValue=\"${ENV_PIPELINE_NAME}\"\""
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
