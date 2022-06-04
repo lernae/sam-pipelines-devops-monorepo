@@ -14,7 +14,7 @@ Parameters:
   SubFolderName:
     Type: String
     Description: The name of the subfolder where code is
-    Default: "projectA"
+    Default: "projectX"
 
 Resources:
   HelloWorldFunction:
