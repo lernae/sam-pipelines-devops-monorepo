@@ -12,7 +12,7 @@ phases:
   build:
     commands:
       - echo ${SUB_FOLDER_NAME} ${SAM_TEMPLATE} ${TESTING_PIPELINE_EXECUTION_ROLE}
-      - sam build --use-container --template ${SAM_TEMPLATE} --container-env-var SUB_FOLDER_NAME=${SUB_FOLDER_NAME}
+      - sam build --use-container --template "pipeline-trigger/pipeline/${SAM_TEMPLATE}" --container-env-var SUB_FOLDER_NAME=${SUB_FOLDER_NAME}
       - . ./assume-role.sh ${TESTING_PIPELINE_EXECUTION_ROLE} test-package
       - sam package --s3-bucket ${TESTING_ARTIFACT_BUCKET}
                     --region ${TESTING_REGION}
