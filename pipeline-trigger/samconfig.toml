@@ -11,4 +11,4 @@ image_repositories = []
 profile = "cicd"
 confirm_changeset = true
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-5uen4quafduw"
-parameter_overrides = "PipelineName=\"projectA\""
+parameter_overrides = "PipelineName=\"projectX\""

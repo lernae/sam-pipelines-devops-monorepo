@@ -14,7 +14,7 @@ Parameters:
   PipelineName:
     Type: String
     Description: The name of the pipeline to create
-    Default: "projectA"
+    Default: "projectX"
 
 Resources:
   CodeBuildServiceRole:
