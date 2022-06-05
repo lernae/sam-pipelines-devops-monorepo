@@ -18,9 +18,9 @@ def lambda_handler(event, context):
         print("inside if")
         # Codepipeline name is foldername. 
         # We can read the configuration from S3 as well. 
-        if not exists_pipeline(folderName):
-            print("pipeline does not exist")
-            create_pipeline(folderName)
+        # if not exists_pipeline(folderName):
+        #     print("pipeline does not exist")
+        #     create_pipeline(folderName)
         returnCode = start_code_pipeline(folderName)
 
     return {
