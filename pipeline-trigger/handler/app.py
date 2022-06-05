@@ -32,6 +32,9 @@ def lambda_handler(event, context):
 def start_code_pipeline(pipelineName):
     client = codepipeline_client()
     print('starting pipeline ',pipelineName)
+    s3c = s3_client()
+    config = {"pipelineName": pipelineName}
+    s3_response = s3c.put_object(Body=json.dumps(config), Bucket='poc-sam-artifacts', Key=pipelineName+'/config.txt')
     response = client.start_pipeline_execution(name=pipelineName)
     print('start_pipeline_execution response ', response)
     return True
@@ -80,3 +83,12 @@ def codebuild_client():
     if not cbclient:
         cbclient = boto3.client('codebuild')
     return cbclient
+
+
+s3client = None
+def s3_client():
+    import boto3
+    global s3client
+    if not s3client:
+        s3client = boto3.client('s3')
+    return s3client

@@ -14,7 +14,7 @@ Parameters:
   PipelineName:
     Type: String
     Description: The name of the pipeline to create
-    Default: "projectX"
+    Default: ""
 
 Resources:
   CodeBuildServiceRole:
@@ -114,7 +114,44 @@ Resources:
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: NO_SOURCE
-        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n#      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - echo \"sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME}-pipeline --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=ResourceType,ParameterValue=\"${ENV_RESOURCE_TYPE}\" ParameterKey=SubFolderName,ParameterValue=\"${ENV_PIPELINE_NAME}\"\""
+        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,ParameterValue=\"${ENV_PIPELINE_NAME}\""
+
+  PipelineConfigBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+#      BucketName: !Join [ "-", [ !Ref Environment, "sam-artifacts" ] ]
+      BucketName: "poc-sam-artifacts"
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteDevArtifactsAfterOneDay
+            Status: "Enabled"
+            ExpirationInDays: 1
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+#      Tags:
+#        - Key: "ENVIRONMENT"
+#          Value: !Ref Environment
+  PipelineConfigBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PipelineConfigBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:*'
+            Effect: Allow
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref PipelineConfigBucket
+                - /*
+            Principal: '*'
+            Condition:
+              StringEquals:
+                aws:ResourceTag/Role: pipeline-execution-role
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
