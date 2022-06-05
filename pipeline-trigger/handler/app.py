@@ -21,12 +21,23 @@ def lambda_handler(event, context):
         # if not exists_pipeline(folderName):
         #     print("pipeline does not exist")
         #     create_pipeline(folderName)
-        returnCode = start_code_pipeline(folderName)
-
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Modified project in repo:' + folderName)
-    }
+        client = codepipeline_client()
+        print('starting pipeline ',pipelineName)
+        response = client.start_pipeline_execution(name=pipelineName,
+                                                   environmentVariablesOverride=[
+                                                       {
+                                                           'name': 'SUB_FOLDER_NAME',
+                                                           'value': pipelineName,
+                                                           'type': 'PLAINTEXT'
+                                                       }
+                                                   ])
+        print('start_pipeline_execution response ',response)
+    #     returnCode = start_code_pipeline(folderName)
+    #
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Modified project in repo:' + folderName)
+        }
     
 
 def start_code_pipeline(pipelineName):
