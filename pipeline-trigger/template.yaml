@@ -37,21 +37,12 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: Allow
-                Action:
-                  - "s3:*"
-                Resource: !Join
-                  - ''
-                  - - 'arn:aws:s3:::'
-                    - !Ref PipelineConfigBucket
-              - Effect: Allow
-                Action:
-                  - "s3:*"
-                Resource: !Join
-                  - ''
-                  - - 'arn:aws:s3:::'
-                    - !Ref PipelineConfigBucket
-                    - /*
+            - Action:
+                - 's3:*'
+              Effect: Allow
+              Resource:
+                - !Sub arn:aws:s3:::${PipelineConfigBucket}
+                - !Sub arn:aws:s3:::${PipelineConfigBucket}/*
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -179,20 +170,12 @@ Resources:
           - Action:
               - 's3:*'
             Effect: Allow
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref PipelineConfigBucket
-                - /*
-            Principal: '*'
-          - Action:
-              - 's3:*'
-            Effect: Allow
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref PipelineConfigBucket
-            Principal: '*'
+            Resource:
+              - !Sub arn:aws:s3:::${PipelineConfigBucket}
+              - !Sub arn:aws:s3:::${PipelineConfigBucket}/*
+            Principal:
+              AWS:
+                - '*'
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
