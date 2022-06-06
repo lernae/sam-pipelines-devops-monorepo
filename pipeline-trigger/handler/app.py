@@ -18,18 +18,18 @@ def lambda_handler(event, context):
         print("inside if")
         # Codepipeline name is foldername. 
         # We can read the configuration from S3 as well.
-        exists = exists_pipeline(folderName)
-        print('pipeline exist? ', exists)
+        # exists = exists_pipeline(folderName)
+        # print('pipeline exist? ', exists)
         # if not exists_pipeline(folderName):
         #     print("pipeline does not exist")
         #     create_pipeline(folderName)
         returnCode = start_code_pipeline(folderName)
 
     print("finished")
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Modified project in repo:' + folderName)
-    }
+    # return {
+    #     'statusCode': 200,
+    #     'body': json.dumps('Modified project in repo:' + folderName)
+    # }
     
 
 def start_code_pipeline(pipelineName):
@@ -40,7 +40,7 @@ def start_code_pipeline(pipelineName):
     # s3_response = s3c.put_object(Body=json.dumps(config), Bucket='poc-sam-artifacts-1', Key=pipelineName+'/config.txt')
     response = client.start_pipeline_execution(name=pipelineName)
     print('start_pipeline_execution response ', response)
-    return True
+    # return True
 
 
 def create_pipeline(pipelineName):
@@ -54,7 +54,7 @@ def create_pipeline(pipelineName):
                                             'type': 'PLAINTEXT'
                                         }
                                     ])
-    return True
+    # return True
 
 
 def exists_pipeline(pipelineName):
@@ -88,10 +88,10 @@ def codebuild_client():
     return cbclient
 
 
-s3client = None
-def s3_client():
-    import boto3
-    global s3client
-    if not s3client:
-        s3client = boto3.client('s3')
-    return s3client
+# s3client = None
+# def s3_client():
+#     import boto3
+#     global s3client
+#     if not s3client:
+#         s3client = boto3.client('s3')
+#     return s3client

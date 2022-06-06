@@ -34,7 +34,7 @@ Parameters:
   SubFolderName:
     Type: String
     Description: The sub project folder name
-    Default: "projectX"
+    Default: "projectA"
   GitProviderType:
     Type: String
     Default: "GitHub"
