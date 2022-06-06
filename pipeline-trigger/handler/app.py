@@ -26,7 +26,23 @@ def lambda_handler(event, context):
         #     print("pipeline does not exist")
         #     create_pipeline(folderName)
         # returnCode = start_code_pipeline(folderName)
-        client.start_pipeline_execution(name=folderName)
+        try:
+            response = client.get_pipeline(name=folderName)
+            if response.pipeline.name == folderName:
+                print('found? ', response.pipeline.name)
+                client.start_pipeline_execution(name=folderName)
+        except:
+            print('pipeline ', pipelineName, ' does not exist')
+            client = codebuild_client()
+            print('creating pipeline')
+            response = client.start_build(projectName='create_pipeline',
+                                          environmentVariablesOverride=[
+                                              {
+                                                  'name': 'ENV_PIPELINE_NAME',
+                                                  'value': pipelineName,
+                                                  'type': 'PLAINTEXT'
+                                              }
+                                          ])
 
     print("finished")
     # return {
