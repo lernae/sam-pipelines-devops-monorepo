@@ -8,7 +8,7 @@ region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
 # s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1hndhir8ozcp5"
-profile = "dev"
+profile = "cicd"
 confirm_changeset = true
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-5uen4quafduw"
 parameter_overrides = "PipelineName=\"projectX\""

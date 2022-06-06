@@ -17,11 +17,13 @@ def lambda_handler(event, context):
     if len(folderName)>0:
         print("inside if")
         # Codepipeline name is foldername. 
-        # We can read the configuration from S3 as well. 
+        # We can read the configuration from S3 as well.
+        exists = exists_pipeline(folderName)
+        print('pipeline exist? ', exists)
         # if not exists_pipeline(folderName):
         #     print("pipeline does not exist")
         #     create_pipeline(folderName)
-        returnCode = await start_code_pipeline(folderName)
+        returnCode = start_code_pipeline(folderName)
 
     print("finished")
     return {

@@ -145,6 +145,7 @@ Resources:
                 ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
                 FullRepositoryId: !Ref AppFullRepositoryId
                 BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+                DetectChanges: false
               OutputArtifacts:
                 - Name: SourceCodeAsZipApp
               RunOrder: 1
