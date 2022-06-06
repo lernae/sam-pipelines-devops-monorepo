@@ -158,7 +158,7 @@ Resources:
                 ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
                 FullRepositoryId: !Ref DevOpsFullRepositoryId
                 BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
-              DetectChanges: False
+                PollForSourceChanges: 'false'
               OutputArtifacts:
                 - Name: SourceCodeAsZipDevOps
               RunOrder: 1
