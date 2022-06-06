@@ -13,7 +13,7 @@ def lambda_handler(event, context):
         print(folderName)
         break
 
-    client = codepipeline_client()
+    client = boto3.client('codepipeline')
     #start the pipeline
     if len(folderName)>0:
         print("inside if")
