@@ -21,7 +21,6 @@ def lambda_handler(event, context):
             response = client.get_pipeline(name=folderName)
             if response.pipeline.name == folderName:
                 print('found? ', response.pipeline.name)
-                client.start_pipeline_execution(name=folderName)
         except:
             print('pipeline ', folderName, ' does not exist')
             client = codebuild_client()
@@ -32,22 +31,30 @@ def lambda_handler(event, context):
                                                   'name': 'ENV_PIPELINE_NAME',
                                                   'value': folderName,
                                                   'type': 'PLAINTEXT'
+                                              },
+                                              {
+                                                  'name': 'ENV_RESOURCE_TYPE',
+                                                  'value': 'lambda',
+                                                  'type': 'PLAINTEXT'
                                               }
                                           ])
 
+        client.start_pipeline_execution(name=folderName)
+        print("finished")
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Modified project in repo:' + folderName)
+        }
     print("finished")
     return {
         'statusCode': 200,
-        'body': json.dumps('Modified project in repo:' + folderName)
+        'body': json.dumps('No modified project in repo')
     }
-    
 
+# how to ensure lambda logs if using these?
 def start_code_pipeline(pipelineName):
     client = codepipeline_client()
     print('starting pipeline ', pipelineName)
-    # s3c = s3_client()
-    # config = {"pipelineName": pipelineName}
-    # s3_response = s3c.put_object(Body=json.dumps(config), Bucket='poc-sam-artifacts-1', Key=pipelineName+'/config.txt')
     response = client.start_pipeline_execution(name=pipelineName)
     print('start_pipeline_execution response ', response)
     # return True
@@ -96,12 +103,3 @@ def codebuild_client():
     if not cbclient:
         cbclient = boto3.client('codebuild')
     return cbclient
-
-
-# s3client = None
-# def s3_client():
-#     import boto3
-#     global s3client
-#     if not s3client:
-#         s3client = boto3.client('s3')
-#     return s3client

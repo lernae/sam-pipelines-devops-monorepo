@@ -140,8 +140,11 @@ Resources:
             Value: !Ref PipelineName
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
-        Type: NO_SOURCE
-        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - env\n      - sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,ParameterValue=\"${ENV_PIPELINE_NAME}\""
+        Type: GITHUB
+        Location: https://github.com/lernae/sam-pipelines-devops-monorepo.git
+        GitCloneDepth: 1
+        BuildSpec: pipeline-trigger/buildspec_create_pipeline.yml
+#        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - env\n      - sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,ParameterValue=\"${ENV_PIPELINE_NAME}\""
 
 #  PipelineConfigBucket:
 #    Type: AWS::S3::Bucket

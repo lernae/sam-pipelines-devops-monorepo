@@ -8,7 +8,8 @@ phases:
       - pip install --upgrade awscli aws-sam-cli
   build:
     commands:
-#      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
+      - env
       - echo ${ENV_PIPELINE_NAME}
-      - echo "sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME}-pipeline --capabilities=CAPABILITY_IAM"
-#      - sam deploy -t codepipeline.yaml --stack-name ${SUB_FOLDER_NAME}-pipeline --capabilities=CAPABILITY_IAM
+      - . ../assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
+      - echo "sam deploy -t ../codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM"
+      - sam deploy -t ../codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,InstanceType=${ENV_PIPELINE_NAME} ParameterKey=ResourceType,InstanceType=${ENV_RESOURCE_TYPE}
