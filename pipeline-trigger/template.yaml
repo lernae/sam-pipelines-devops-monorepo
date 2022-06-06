@@ -185,9 +185,6 @@ Resources:
                 - !Ref PipelineConfigBucket
                 - /*
             Principal: '*'
-            Condition:
-              StringEquals:
-                aws:ResourceTag/Role: pipeline-execution-role
           - Action:
               - 's3:*'
             Effect: Allow
@@ -196,9 +193,6 @@ Resources:
               - - 'arn:aws:s3:::'
                 - !Ref PipelineConfigBucket
             Principal: '*'
-            Condition:
-              StringEquals:
-                aws:ResourceTag/Role: pipeline-execution-role
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
