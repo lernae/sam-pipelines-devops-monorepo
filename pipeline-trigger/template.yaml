@@ -17,6 +17,41 @@ Parameters:
     Default: ""
 
 Resources:
+  S3ServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Tags:
+        - Key: Role
+          Value: aws-sam-pipeline-s3-service-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service:
+                - s3.amazonaws.com
+      Policies:
+        - PolicyName: S3BucketPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:*"
+                Resource: !Join
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - !Ref PipelineConfigBucket
+              - Effect: Allow
+                Action:
+                  - "s3:*"
+                Resource: !Join
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - !Ref PipelineConfigBucket
+                    - /*
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
     Properties:
