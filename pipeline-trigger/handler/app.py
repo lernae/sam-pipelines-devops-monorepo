@@ -21,8 +21,9 @@ def lambda_handler(event, context):
         # if not exists_pipeline(folderName):
         #     print("pipeline does not exist")
         #     create_pipeline(folderName)
-        returnCode = start_code_pipeline(folderName)
+        returnCode = await start_code_pipeline(folderName)
 
+    print("finished")
     return {
         'statusCode': 200,
         'body': json.dumps('Modified project in repo:' + folderName)
@@ -31,10 +32,10 @@ def lambda_handler(event, context):
 
 def start_code_pipeline(pipelineName):
     client = codepipeline_client()
-    print('starting pipeline ',pipelineName)
-    s3c = s3_client()
-    config = {"pipelineName": pipelineName}
-    s3_response = s3c.put_object(Body=json.dumps(config), Bucket='poc-sam-artifacts-1', Key=pipelineName+'/config.txt')
+    print('starting pipeline ', pipelineName)
+    # s3c = s3_client()
+    # config = {"pipelineName": pipelineName}
+    # s3_response = s3c.put_object(Body=json.dumps(config), Bucket='poc-sam-artifacts-1', Key=pipelineName+'/config.txt')
     response = client.start_pipeline_execution(name=pipelineName)
     print('start_pipeline_execution response ', response)
     return True
@@ -46,7 +47,7 @@ def create_pipeline(pipelineName):
     response = client.start_build(projectName='create_pipeline',
                                   environmentVariablesOverride=[
                                         {
-                                            'name': 'PIPELINE_NAME',
+                                            'name': 'ENV_PIPELINE_NAME',
                                             'value': pipelineName,
                                             'type': 'PLAINTEXT'
                                         }

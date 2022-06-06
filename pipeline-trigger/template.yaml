@@ -17,32 +17,32 @@ Parameters:
     Default: ""
 
 Resources:
-  S3ServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Tags:
-        - Key: Role
-          Value: aws-sam-pipeline-s3-service-role
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-              - "sts:AssumeRole"
-            Effect: Allow
-            Principal:
-              Service:
-                - s3.amazonaws.com
-      Policies:
-        - PolicyName: S3BucketPolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-            - Action:
-                - 's3:*'
-              Effect: Allow
-              Resource:
-                - !Sub arn:aws:s3:::${PipelineConfigBucket}
-                - !Sub arn:aws:s3:::${PipelineConfigBucket}/*
+#  S3ServiceRole:
+#    Type: AWS::IAM::Role
+#    Properties:
+#      Tags:
+#        - Key: Role
+#          Value: aws-sam-pipeline-s3-service-role
+#      AssumeRolePolicyDocument:
+#        Version: "2012-10-17"
+#        Statement:
+#          - Action:
+#              - "sts:AssumeRole"
+#            Effect: Allow
+#            Principal:
+#              Service:
+#                - s3.amazonaws.com
+#      Policies:
+#        - PolicyName: S3BucketPolicy
+#          PolicyDocument:
+#            Version: "2012-10-17"
+#            Statement:
+#            - Action:
+#                - 's3:*'
+#              Effect: Allow
+#              Resource:
+#                - !Sub arn:aws:s3:::${PipelineConfigBucket}
+#                - !Sub arn:aws:s3:::${PipelineConfigBucket}/*
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -141,7 +141,7 @@ Resources:
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: NO_SOURCE
-        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,ParameterValue=\"${ENV_PIPELINE_NAME}\""
+        BuildSpec: "version: 0.2\nphases:\n  install:\n    runtime-versions:\n      python: 3.8\n    commands:\n      - pip install --upgrade pip\n      - pip install --upgrade awscli aws-sam-cli\n  build:\n    commands:\n      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy\n      - echo ${ENV_PIPELINE_NAME}\n      - env\n      - sam deploy -t codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,ParameterValue=\"${ENV_PIPELINE_NAME}\""
 
 #  PipelineConfigBucket:
 #    Type: AWS::S3::Bucket
@@ -160,8 +160,8 @@ Resources:
 ##      Tags:
 ##        - Key: "ENVIRONMENT"
 ##          Value: !Ref Environment
-  PipelineConfigBucket:
-    Type: 'AWS::S3::Bucket'
+#  PipelineConfigBucket:
+#    Type: 'AWS::S3::Bucket'
 
 
 Outputs:
