@@ -156,7 +156,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
 #      BucketName: !Join [ "-", [ !Ref Environment, "sam-artifacts" ] ]
-      BucketName: "poc-sam-artifacts"
+      BucketName: "poc-sam-artifacts-1"
       LifecycleConfiguration:
         Rules:
           - Id: DeleteDevArtifactsAfterOneDay

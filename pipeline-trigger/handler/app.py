@@ -34,7 +34,7 @@ def start_code_pipeline(pipelineName):
     print('starting pipeline ',pipelineName)
     s3c = s3_client()
     config = {"pipelineName": pipelineName}
-    s3_response = s3c.put_object(Body=json.dumps(config), Bucket='poc-sam-artifacts', Key=pipelineName+'/config.txt')
+    s3_response = s3c.put_object(Body=json.dumps(config), Bucket='poc-sam-artifacts-1', Key=pipelineName+'/config.txt')
     response = client.start_pipeline_execution(name=pipelineName)
     print('start_pipeline_execution response ', response)
     return True
