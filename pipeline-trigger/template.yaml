@@ -148,6 +148,13 @@ Resources:
               - - 'arn:aws:s3:::'
                 - !Ref PipelineConfigBucket
                 - /*
+          - Action:
+              - 's3:*'
+            Effect: Allow
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref PipelineConfigBucket
             Principal: '*'
             Condition:
               StringEquals:
