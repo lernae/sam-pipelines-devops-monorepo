@@ -32,14 +32,14 @@ def lambda_handler(event, context):
                 print('found? ', response.pipeline.name)
                 client.start_pipeline_execution(name=folderName)
         except:
-            print('pipeline ', pipelineName, ' does not exist')
+            print('pipeline ', folderName, ' does not exist')
             client = codebuild_client()
             print('creating pipeline')
             response = client.start_build(projectName='create_pipeline',
                                           environmentVariablesOverride=[
                                               {
                                                   'name': 'ENV_PIPELINE_NAME',
-                                                  'value': pipelineName,
+                                                  'value': folderName,
                                                   'type': 'PLAINTEXT'
                                               }
                                           ])
