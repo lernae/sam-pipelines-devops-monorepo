@@ -90,6 +90,7 @@ Resources:
           Action:
           - codepipeline:*
           - codebuild:*
+          - s3:*
           Resource: '*'
       Events:
         PipelineTrigger:
@@ -148,6 +149,10 @@ Resources:
               - - 'arn:aws:s3:::'
                 - !Ref PipelineConfigBucket
                 - /*
+            Principal: '*'
+            Condition:
+              StringEquals:
+                aws:ResourceTag/Role: pipeline-execution-role
           - Action:
               - 's3:*'
             Effect: Allow
