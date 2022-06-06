@@ -13,6 +13,7 @@ def lambda_handler(event, context):
         print(folderName)
         break
 
+    client = codepipeline_client()
     #start the pipeline
     if len(folderName)>0:
         print("inside if")
@@ -23,7 +24,8 @@ def lambda_handler(event, context):
         # if not exists_pipeline(folderName):
         #     print("pipeline does not exist")
         #     create_pipeline(folderName)
-        returnCode = start_code_pipeline(folderName)
+        # returnCode = start_code_pipeline(folderName)
+        client.start_pipeline_execution(name=folderName)
 
     print("finished")
     # return {
