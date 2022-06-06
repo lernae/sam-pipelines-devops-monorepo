@@ -17,15 +17,6 @@ def lambda_handler(event, context):
     client = boto3.client('codepipeline')
     #start the pipeline
     if len(folderName)>0:
-        print("inside if")
-        # Codepipeline name is foldername. 
-        # We can read the configuration from S3 as well.
-        # exists = exists_pipeline(folderName)
-        # print('pipeline exist? ', exists)
-        # if not exists_pipeline(folderName):
-        #     print("pipeline does not exist")
-        #     create_pipeline(folderName)
-        # returnCode = start_code_pipeline(folderName)
         try:
             response = client.get_pipeline(name=folderName)
             if response.pipeline.name == folderName:
@@ -45,10 +36,10 @@ def lambda_handler(event, context):
                                           ])
 
     print("finished")
-    # return {
-    #     'statusCode': 200,
-    #     'body': json.dumps('Modified project in repo:' + folderName)
-    # }
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Modified project in repo:' + folderName)
+    }
     
 
 def start_code_pipeline(pipelineName):
