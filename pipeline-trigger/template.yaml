@@ -98,6 +98,7 @@ Resources:
           Properties:
             Path: /
             Method: post
+      Timeout: 900
   PipelineTriggerCreatePipelineTask:
     Type: AWS::CodeBuild::Project # More info about this Resource: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-codebuild-project.html
     Properties:
