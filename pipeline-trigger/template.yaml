@@ -15,34 +15,11 @@ Parameters:
     Type: String
     Description: The name of the pipeline to create
     Default: ""
+  TestingPipelineExecutionRole:
+    Type: String
+    Default: "arn:aws:iam::357993141891:role/aws-sam-cli-managed-test-pip-PipelineExecutionRole-NKPM1BUMN4W"
 
 Resources:
-#  S3ServiceRole:
-#    Type: AWS::IAM::Role
-#    Properties:
-#      Tags:
-#        - Key: Role
-#          Value: aws-sam-pipeline-s3-service-role
-#      AssumeRolePolicyDocument:
-#        Version: "2012-10-17"
-#        Statement:
-#          - Action:
-#              - "sts:AssumeRole"
-#            Effect: Allow
-#            Principal:
-#              Service:
-#                - s3.amazonaws.com
-#      Policies:
-#        - PolicyName: S3BucketPolicy
-#          PolicyDocument:
-#            Version: "2012-10-17"
-#            Statement:
-#            - Action:
-#                - 's3:*'
-#              Effect: Allow
-#              Resource:
-#                - !Sub arn:aws:s3:::${PipelineConfigBucket}
-#                - !Sub arn:aws:s3:::${PipelineConfigBucket}/*
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -124,7 +101,6 @@ Resources:
           Action:
           - codepipeline:*
           - codebuild:*
-          - s3:*
           Resource: '*'
       Events:
         PipelineTrigger:
@@ -146,6 +122,8 @@ Resources:
         EnvironmentVariables:
           - Name: ENV_PIPELINE_NAME
             Value: !Ref PipelineName
+          - Name: ENV_PIPELINE_EXECUTION_ROLE
+            Value: !Ref TestingPipelineExecutionRole
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: GITHUB
