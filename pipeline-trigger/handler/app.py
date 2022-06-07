@@ -21,8 +21,8 @@ def lambda_handler(event, context):
     if len(folderName)>0:
         try:
             response = client.get_pipeline(name=folderName)
-            if response.pipeline.name == folderName:
-                print('found? ', response.pipeline.name)
+            folderFound = response['pipeline']['name']
+            print('found? ', folderFound)
         except:
             print('pipeline ', folderName, ' does not exist')
             cb_client = codebuild_client()

@@ -15,9 +15,6 @@ Parameters:
     Type: String
     Description: The name of the pipeline to create
     Default: ""
-  TestingPipelineExecutionRole:
-    Type: String
-    Default: "arn:aws:iam::357993141891:role/aws-sam-cli-managed-test-pip-PipelineExecutionRole-NKPM1BUMN4W"
 
 Resources:
   CodeBuildServiceRole:
@@ -113,8 +110,6 @@ Resources:
         EnvironmentVariables:
           - Name: ENV_PIPELINE_NAME
             Value: !Ref PipelineName
-          - Name: ENV_PIPELINE_EXECUTION_ROLE
-            Value: !Ref TestingPipelineExecutionRole
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: GITHUB
