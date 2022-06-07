@@ -23,22 +23,21 @@ def lambda_handler(event, context):
                 print('found? ', response.pipeline.name)
         except:
             print('pipeline ', folderName, ' does not exist')
-            client = codebuild_client()
+            cb_client = codebuild_client()
             print('creating pipeline')
-            response = client.start_build(projectName='create_pipeline',
-                                          environmentVariablesOverride=[
-                                              {
-                                                  'name': 'ENV_PIPELINE_NAME',
-                                                  'value': folderName,
-                                                  'type': 'PLAINTEXT'
-                                              },
-                                              {
-                                                  'name': 'ENV_RESOURCE_TYPE',
-                                                  'value': 'lambda',
-                                                  'type': 'PLAINTEXT'
-                                              }
-                                          ])
-
+            response = cb_client.start_build(projectName='create_pipeline',
+                                             environmentVariablesOverride=[
+                                                  {
+                                                      'name': 'ENV_PIPELINE_NAME',
+                                                      'value': folderName,
+                                                      'type': 'PLAINTEXT'
+                                                  },
+                                                  {
+                                                      'name': 'ENV_RESOURCE_TYPE',
+                                                      'value': 'lambda',
+                                                      'type': 'PLAINTEXT'
+                                                  }
+                                             ])
         client.start_pipeline_execution(name=folderName)
         print("finished")
         return {

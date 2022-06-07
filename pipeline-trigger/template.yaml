@@ -65,7 +65,7 @@ Resources:
                   - "cloudformation:SetStackPolicy"
                   - "cloudformation:ValidateTemplate"
                 Resource:
-                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*"
+                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
         - PolicyName: AssumeStagePipExecutionRoles
           PolicyDocument:
             Version: "2012-10-17"
