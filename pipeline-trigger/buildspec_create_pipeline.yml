@@ -11,5 +11,4 @@ phases:
       - env
       - echo ${ENV_PIPELINE_NAME}
 #      - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
-      - echo "sam deploy -t ${CODEBUILD_SRC_DIR}/codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM"
-      - sam deploy -t ${CODEBUILD_SRC_DIR}/codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,InstanceType=${ENV_PIPELINE_NAME} ParameterKey=ResourceType,InstanceType=${ENV_RESOURCE_TYPE}
+      - sam deploy -t ${CODEBUILD_SRC_DIR}/codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,ParameterValue=${ENV_PIPELINE_NAME} ParameterKey=ResourceType,ParameterValue=${ENV_RESOURCE_TYPE}
