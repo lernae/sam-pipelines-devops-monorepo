@@ -50,7 +50,7 @@ def lambda_handler(event, context):
         'body': json.dumps('No modified project in repo')
     }
 
-# how to ensure lambda logs if using these?
+
 def start_code_pipeline(pipelineName):
     client = codepipeline_client()
     print('starting pipeline ', pipelineName)
