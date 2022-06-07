@@ -56,17 +56,14 @@ Resources:
                   - "cloudformation:*"
                 Resource:
                   - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
-        - PolicyName: AssumeStagePipExecutionRoles
+        - PolicyName: AllowIAMAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Action:
-                  - sts:AssumeRole
+                  - "iam:*"
                 Effect: Allow
                 Resource: "*"
-                Condition:
-                  StringEquals:
-                    aws:ResourceTag/Role: pipeline-execution-role
         - PolicyName: CreatePipeline
           PolicyDocument:
             Version: "2012-10-17"
