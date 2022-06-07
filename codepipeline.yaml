@@ -127,6 +127,7 @@ Resources:
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
+      Name: !Ref SubFolderName
       ArtifactStore:
         Location: !Ref PipelineArtifactsBucket
         Type: S3

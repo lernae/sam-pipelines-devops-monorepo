@@ -1,5 +1,7 @@
 import json
 import boto3
+import time
+
 
 def lambda_handler(event, context):
     print(event)
@@ -25,8 +27,8 @@ def lambda_handler(event, context):
             print('pipeline ', folderName, ' does not exist')
             cb_client = codebuild_client()
             print('creating pipeline')
-            response = cb_client.start_build(projectName='create_pipeline',
-                                             environmentVariablesOverride=[
+            start_codebuild(projectName='create_pipeline',
+                                             envVarList=[
                                                   {
                                                       'name': 'ENV_PIPELINE_NAME',
                                                       'value': folderName,
@@ -49,6 +51,33 @@ def lambda_handler(event, context):
         'statusCode': 200,
         'body': json.dumps('No modified project in repo')
     }
+
+
+def start_codebuild(projectName, envVarList):
+    print('starting codebuild ',projectName)
+    client = codebuild_client()
+    response = client.start_build(projectName=projectName)
+    print('start_build response ',response)
+    # Check for the status of the build
+    buildId = response['build']['id']
+    print('buildId ',buildId)
+    status = check_build_status(buildId)
+    return status
+
+
+def check_build_status(buildId):
+    import boto3
+    global cbclient
+    if not cbclient:
+        cbclient = boto3.client('codebuild')
+    status = "failed"
+    while status != "SUCCEEDED" and status != "FAILED":
+        response = cbclient.batch_get_builds(ids=[buildId])
+        status = response['builds'][0]['buildStatus']
+        print('build status ',status)
+        if status == "IN_PROGRESS":
+            time.sleep(5)
+    return status
 
 
 def start_code_pipeline(pipelineName):
