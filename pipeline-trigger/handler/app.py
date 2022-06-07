@@ -56,7 +56,7 @@ def lambda_handler(event, context):
 def start_codebuild(projectName, envVarList):
     print('starting codebuild ',projectName)
     client = codebuild_client()
-    response = client.start_build(projectName=projectName)
+    response = client.start_build(projectName=projectName, envVarList=envVarList)
     print('start_build response ',response)
     # Check for the status of the build
     buildId = response['build']['id']
