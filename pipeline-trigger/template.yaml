@@ -64,6 +64,14 @@ Resources:
                   - "iam:*"
                 Effect: Allow
                 Resource: "*"
+        - PolicyName: AllowS3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "s3:*"
+                Effect: Allow
+                Resource: "*"
         - PolicyName: CreatePipeline
           PolicyDocument:
             Version: "2012-10-17"
