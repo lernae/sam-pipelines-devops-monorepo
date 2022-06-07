@@ -53,17 +53,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "cloudformation:CreateStack"
-                  - "cloudformation:DescribeStacks"
-                  - "cloudformation:DeleteStack"
-                  - "cloudformation:UpdateStack"
-                  - "cloudformation:CreateChangeSet"
-                  - "cloudformation:ExecuteChangeSet"
-                  - "cloudformation:DeleteChangeSet"
-                  - "cloudformation:DescribeChangeSet"
-                  - "cloudformation:SetStackPolicy"
-                  - "cloudformation:SetStackPolicy"
-                  - "cloudformation:ValidateTemplate"
+                  - "cloudformation:*"
                 Resource:
                   - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
         - PolicyName: AssumeStagePipExecutionRoles
