@@ -17,6 +17,8 @@ def lambda_handler(event, context):
         break
 
     client = boto3.client('codepipeline')
+    csclient = boto3.client('codestar-connections')
+    csresp = csclient.list_connections(providerType="GitHub") # doesn't make sense to get this each time, set this once
     #start the pipeline
     if len(folderName)>0:
         try:
@@ -38,7 +40,12 @@ def lambda_handler(event, context):
                                                       'name': 'ENV_RESOURCE_TYPE',
                                                       'value': 'lambda',
                                                       'type': 'PLAINTEXT'
-                                                  }
+                                                  },
+                                                 {
+                                                     'name': 'ENV_CODESTAR_CONNECTION_ARN',
+                                                     'value': csresp['Connections']['ConnectionArn'],
+                                                     'type': 'PLAINTEXT'
+                                                 }
                                              ])
         client.start_pipeline_execution(name=folderName)
         print("finished")
