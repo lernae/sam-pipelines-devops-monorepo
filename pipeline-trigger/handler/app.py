@@ -6,7 +6,7 @@ import time
 def lambda_handler(event, context):
     print(event)
     githubEventPayload=json.loads(event['body'])
-    modifiedFiles = githubEventPayload["commits"][0]["modified"]
+    modifiedFiles = githubEventPayload["commits"][0]["modified"] or githubEventPayload["commits"][0]["added"] or githubEventPayload["commits"][0]["deleted"]
     print("modified files")
     print(modifiedFiles)
     #full path
