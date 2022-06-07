@@ -56,20 +56,15 @@ Resources:
                   - "cloudformation:*"
                 Resource:
                   - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
-        - PolicyName: AllowIAMAccess
+        - PolicyName: CreatePipelineResourcesAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Action:
-                  - "iam:*"
-                Effect: Allow
-                Resource: "*"
-        - PolicyName: AllowS3Access
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Action:
-                  - "s3:*"
+                  - "*"
+#                  - "iam:*"
+#                  - "s3:*"
+#                  - "codestar-connections:*"
                 Effect: Allow
                 Resource: "*"
         - PolicyName: CreatePipeline
