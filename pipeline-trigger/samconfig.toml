@@ -11,4 +11,4 @@ image_repositories = []
 profile = "cicd"
 confirm_changeset = true
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-5uen4quafduw"
-parameter_overrides = "PipelineName=\"projectX\""
+parameter_overrides = "PipelineName=\"projectX\" TestingPipelineExecutionRole=\"arn:aws:iam::357993141891:role/aws-sam-cli-managed-test-pip-PipelineExecutionRole-NKPM1BUMN4W\""
