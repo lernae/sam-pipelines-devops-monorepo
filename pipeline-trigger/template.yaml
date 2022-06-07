@@ -15,6 +15,9 @@ Parameters:
     Type: String
     Description: The name of the pipeline to create
     Default: ""
+  CodeStarConnectionArn:
+    Type: String
+    Default: "arn:aws:codestar-connections:us-east-1:357993141891:connection/e2fa7a45-ef1b-43bc-b182-2f05624a8791"
 
 Resources:
   CodeBuildServiceRole:
@@ -110,6 +113,8 @@ Resources:
         EnvironmentVariables:
           - Name: ENV_PIPELINE_NAME
             Value: !Ref PipelineName
+          - Name: ENV_CODESTAR_CONNECTION_ARN
+            Value: !Ref CodeStarConnectionArn
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: GITHUB
