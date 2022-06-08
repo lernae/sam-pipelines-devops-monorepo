@@ -121,7 +121,11 @@ Resources:
         Location: https://github.com/lernae/sam-pipelines-devops-monorepo.git
         GitCloneDepth: 1
         BuildSpec: pipeline-trigger/buildspec_create_pipeline.yml
-
+      SecondarySources:
+        Type: GITHUB
+        Location: https://github.com/lernae/sam-pipelines-appdev-monorepo.git
+        GitCloneDepth: 1
+        SourceIdentifier: appdev
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
