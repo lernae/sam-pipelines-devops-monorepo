@@ -15,11 +15,11 @@ phases:
       - cd ${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}
       - ls -la
       - sam build --use-container --template ${CODEBUILD_SRC_DIR}/${SAM_TEMPLATE} --container-env-var SUB_FOLDER_NAME=${SUB_FOLDER_NAME} --parameter-overrides ParameterKey=SubFolderName,ParameterValue=${SUB_FOLDER_NAME}
-      - . ./assume-role.sh ${TESTING_PIPELINE_EXECUTION_ROLE} test-package
+      - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${TESTING_PIPELINE_EXECUTION_ROLE} test-package
       - sam package --s3-bucket ${TESTING_ARTIFACT_BUCKET}
                     --region ${TESTING_REGION}
                     --output-template-file packaged-test.yaml
-      - . ./assume-role.sh ${PROD_PIPELINE_EXECUTION_ROLE} prod-package
+      - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${PROD_PIPELINE_EXECUTION_ROLE} prod-package
       - sam package --s3-bucket ${PROD_ARTIFACT_BUCKET}
                     --region ${PROD_REGION}
                     --output-template-file packaged-prod.yaml
