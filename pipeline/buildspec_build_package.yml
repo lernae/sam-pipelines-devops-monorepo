@@ -23,8 +23,10 @@ phases:
       - sam package --s3-bucket ${PROD_ARTIFACT_BUCKET}
                     --region ${PROD_REGION}
                     --output-template-file packaged-prod.yaml
+      - ls -la
 artifacts:
   type: zip
+  base-directory: ${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}
   files:
     - packaged-test.yaml
     - packaged-prod.yaml
