@@ -9,7 +9,7 @@ phases:
   build:
     commands:
       - env
-      - ls -la ${$CODEBUILD_SRC_DIR_appdev}
+      - ls -la ${CODEBUILD_SRC_DIR_appdev}
       - echo ${ENV_PIPELINE_NAME}
 #      - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
       - sam deploy -t ${CODEBUILD_SRC_DIR}/codepipeline.yaml --stack-name ${ENV_PIPELINE_NAME} --capabilities=CAPABILITY_IAM --parameter-overrides ParameterKey=SubFolderName,ParameterValue=${ENV_PIPELINE_NAME} ParameterKey=ResourceType,ParameterValue=${ENV_RESOURCE_TYPE} ParameterKey=CodeStarConnectionArn,ParameterValue=${ENV_CODESTAR_CONNECTION_ARN}
