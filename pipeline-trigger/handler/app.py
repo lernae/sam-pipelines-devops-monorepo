@@ -25,6 +25,7 @@ def lambda_handler(event, context):
             response = client.get_pipeline(name=folderName)
             folderFound = response['pipeline']['name']
             print('found? ', folderFound)
+            client.start_pipeline_execution(name=folderName) # pipeline runs at first creation so no need to trigger this if creating it first time
         except:
             print('pipeline ', folderName, ' does not exist')
             cb_client = codebuild_client()
@@ -42,7 +43,6 @@ def lambda_handler(event, context):
                                                       'type': 'PLAINTEXT'
                                                   }
                                              ])
-        client.start_pipeline_execution(name=folderName)
         print("finished")
         return {
             'statusCode': 200,
