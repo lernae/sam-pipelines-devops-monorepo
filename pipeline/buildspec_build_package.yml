@@ -24,8 +24,7 @@ phases:
                     --region ${PROD_REGION}
                     --output-template-file packaged-prod.yaml
 artifacts:
+  type: zip
   files:
     - packaged-test.yaml
     - packaged-prod.yaml
-    - assume-role.sh
-    - pipeline/*
