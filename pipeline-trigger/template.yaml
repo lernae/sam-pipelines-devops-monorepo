@@ -17,7 +17,7 @@ Parameters:
     Default: ""
   CodeStarConnectionArn:
     Type: String
-    Default: "arn:aws:codestar-connections:us-east-1:357993141891:connection/e2fa7a45-ef1b-43bc-b182-2f05624a8791"
+    Default: ""
 
 Resources:
   CodeBuildServiceRole:
