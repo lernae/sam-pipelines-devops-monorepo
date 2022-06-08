@@ -58,13 +58,13 @@ Parameters:
     Default: "sam-app"
   TestingPipelineExecutionRole:
     Type: String
-    Default: "arn:aws:iam::357993141891:role/aws-sam-cli-managed-test-pip-PipelineExecutionRole-NKPM1BUMN4W"
+    Default: "arn:aws:iam::357271360943:role/aws-sam-cli-managed-staging-PipelineExecutionRole-PL8IIIT61BAP"
   TestingCloudFormationExecutionRole:
     Type: String
-    Default: "arn:aws:iam::357993141891:role/aws-sam-cli-managed-test-CloudFormationExecutionR-JFYA4IL7PVX7"
+    Default: "arn:aws:iam::357271360943:role/aws-sam-cli-managed-stagi-CloudFormationExecutionR-19YBT5PNU9VJ5"
   TestingArtifactBucket:
     Type: String
-    Default: "aws-sam-cli-managed-test-pipeline-artifactsbucket-z6vh54gbtxuk"
+    Default: "aws-sam-cli-managed-staging-pipel-artifactsbucket-1tjffybzqx6ci"
   TestingImageRepository:
     Type: String
     # If there are functions with "Image" PackageType in your template,
