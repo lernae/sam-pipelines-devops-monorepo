@@ -8,7 +8,7 @@ phases:
       - pip install --upgrade awscli aws-sam-cli
   build:
     commands:
-      - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
+      - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
       - sam deploy --stack-name ${ENV_STACK_NAME}
                     --template ${ENV_TEMPLATE}
                     --capabilities CAPABILITY_IAM

@@ -268,7 +268,7 @@ Resources:
                   Version: "1"
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectDeploy
-                  PrimarySource: BuildArtifactAsZip
+                  PrimarySource: SourceCodeAsZipDevOps
                   EnvironmentVariables: !Sub |
                     [
                       {"name": "ENV_TEMPLATE", "value": "packaged-test.yaml"},
@@ -688,7 +688,7 @@ Resources:
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: CODEPIPELINE
-        BuildSpec: $CODEBUILD_SRC_DIR_SourceCodeAsZipDevOps/pipeline/buildspec_deploy.yml
+        BuildSpec: pipeline/buildspec_deploy.yml
 Outputs:
   CodeStarConnectionArn:
     Condition: CreateConnection
