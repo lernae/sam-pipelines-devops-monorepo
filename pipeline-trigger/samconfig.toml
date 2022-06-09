@@ -12,4 +12,4 @@ profile = "cicd"
 confirm_changeset = true
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-5uen4quafduw"
 # parameter_overrides = "PipelineName=\"projectX\" TestingPipelineExecutionRole=\"arn:aws:iam::357993141891:role/aws-sam-cli-managed-test-pip-PipelineExecutionRole-NKPM1BUMN4W\""
-parameter_overrides = "PipelineName=\"\" CodeStarConnectionArn=\"arn:aws:codestar-connections:us-east-1:357993141891:connection/e2fa7a45-ef1b-43bc-b182-2f05624a8791\""
+parameter_overrides = "PipelineName=\"\" CodeStarConnectionArn=\"\""

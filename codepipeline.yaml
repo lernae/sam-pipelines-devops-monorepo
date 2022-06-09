@@ -282,6 +282,7 @@ Resources:
                     ]
                 InputArtifacts:
                   - Name: BuildArtifactAsZip
+                  - Name: SourceCodeAsZipDevOps
                 RunOrder: 1
               # Uncomment the following step for running the integration tests
               # - Name: IntegrationTest
@@ -330,6 +331,7 @@ Resources:
                     ]
                 InputArtifacts:
                   - Name: BuildArtifactAsZip
+                  - Name: SourceCodeAsZipDevOps
           - !Ref AWS::NoValue
 
   PipelineArtifactsBucket:
