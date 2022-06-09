@@ -688,7 +688,7 @@ Resources:
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: CODEPIPELINE
-        BuildSpec: pipeline/buildspec_deploy.yml
+        BuildSpec: SourceCodeAsZipDevOps::pipeline/buildspec_deploy.yml
 Outputs:
   CodeStarConnectionArn:
     Condition: CreateConnection
