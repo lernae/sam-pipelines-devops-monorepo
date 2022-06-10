@@ -10,7 +10,7 @@ phases:
     commands:
       - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
       - env
-      - sam deploy --stack-name ${ENV_SUB_FOLDER_NAME}
+      - sam deploy --stack-name "${ENV_SUB_FOLDER_NAME}-${ENV_STACK_NAME}"
                     --template ${CODEBUILD_SRC_DIR_BuildArtifactAsZip}/${ENV_TEMPLATE}
                     --capabilities CAPABILITY_IAM
                     --region ${ENV_REGION}
