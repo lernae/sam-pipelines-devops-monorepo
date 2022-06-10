@@ -13,8 +13,10 @@ phases:
     commands:
       - echo ${SUB_FOLDER_NAME} ${SAM_TEMPLATE} ${TESTING_PIPELINE_EXECUTION_ROLE}
       - cd ${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}
+      - source ${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}/config.env
+      - env
       - ls -la
-      - sam build --use-container --template ${CODEBUILD_SRC_DIR}/${SAM_TEMPLATE} --container-env-var SUB_FOLDER_NAME=${SUB_FOLDER_NAME} --parameter-overrides ParameterKey=SubFolderName,ParameterValue=${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}/${SUB_FOLDER_NAME}
+      - sam build --use-container --template ${CODEBUILD_SRC_DIR}/${RESOURCE_TYPE}-${SAM_TEMPLATE} --container-env-var SUB_FOLDER_NAME=${SUB_FOLDER_NAME} --parameter-overrides ParameterKey=SubFolderName,ParameterValue=${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}/${SUB_FOLDER_NAME}
       - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${TESTING_PIPELINE_EXECUTION_ROLE} test-package
       - sam package --s3-bucket ${TESTING_ARTIFACT_BUCKET}
                     --region ${TESTING_REGION}
