@@ -9,8 +9,9 @@ phases:
   build:
     commands:
       - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
+      - env
       - sam deploy --stack-name ${ENV_STACK_NAME}
-                    --template ${ENV_TEMPLATE}
+                    --template ${CODEBUILD_SRC_DIR_BuildArtifactAsZip}/${ENV_TEMPLATE}
                     --capabilities CAPABILITY_IAM
                     --region ${ENV_REGION}
                     --s3-bucket ${ENV_BUCKET}
