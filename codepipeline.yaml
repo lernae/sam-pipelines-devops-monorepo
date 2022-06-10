@@ -320,7 +320,7 @@ Resources:
                 RunOrder: 2 # keeping run order as 2 in case manual approval is enabled
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectDeploy
-                  PrimarySource: BuildArtifactAsZip
+                  PrimarySource: SourceCodeAsZipDevOps
                   EnvironmentVariables: !Sub |
                     [
                       {"name": "ENV_TEMPLATE", "value": "packaged-prod.yaml"},
