@@ -339,9 +339,9 @@ Successfully created/updated stack - pipeline-trigger in us-east-1
       SUMMARY
       We will generate a pipeline config file based on the following information:
             What is the Git provider?: GitHub
-            What is the full repository id (Example: some-user/my-repo)?: flochaz/sam-pipelines-monorepo
+            What is the full repository id (Example: some-user/my-repo)?: lernae/sam-pipelines-appdev-monorepo
             What is the Git branch used for production deployments?: main
-            What is the template file path?: template.yaml
+            What is the template file path?: lambda_template.yaml
             Select an index or enter the stage 1's configuration name (as provided during the bootstrapping): 1
             What is the sam application stack name for stage 1?: sam-app
             What is the pipeline execution role ARN for stage 1?: arn:aws:iam::<TEST ACCOUNT ID>:role/aws-sam-cli-managed-test-pip-PipelineExecutionRole-1DLBUQ6UNNQX7
@@ -373,83 +373,140 @@ Successfully created/updated stack - pipeline-trigger in us-east-1
       * Question 4:  Account details: ***test (named profile)***
       * Question 5: region ***UP TO YOU***
       * Question 6: Enter the pipeline IAM user ARN if you have previously created one, or we will create one for you []: ***THE ARN OF THE DUMMY USER CREATED PREVIOUSLY !!!!!!***
+      * Question 7: What is the template file path? [template.yaml]: ***lambda-template.yaml***
       * ... Same for Stage 2 with prod as name and prod named profile
 2. Run `dos2unix.exe assume-role.sh` to ensure it's in unix format as this shell script is used in CodeBuild builds.
 ```shell
 $ dos2unix.exe assume-role.sh
 dos2unix: converting file assume-role.sh to Unix format...
 ```
-3. Update your pipeline for Mono repo support
+3. Update your pipeline for Mono repo support.  For reference, check codepipeline.yaml.bkp file.
    1. Update `codepipeline.yaml`
-      1. Under Parameters add below to name your pipeline following sub project folder name 
-         ```
-            Pipeline:
-            Type: AWS::CodePipeline::Pipeline
-            Properties:
-         +      Name: !Ref SubFolderName
-         ```
-      1. Update pipeline cloudformation template location:
-         ```
-         @@ -150,7 +151,7 @@ Resources:
-                        RoleArn: !GetAtt PipelineStackCloudFormationExecutionRole.Arn
-                        StackName: !Ref AWS::StackName
-                        ChangeSetName: !Sub ${AWS::StackName}-ChangeSet
-         -                TemplatePath: SourceCodeAsZip::codepipeline.yaml
-         +                TemplatePath: SourceCodeAsZip::projectA/codepipeline.yaml
-                        Capabilities: CAPABILITY_NAMED_IAM
-         ```
-      1. Update buildspec locations:
-         ```
-         @@ -579,7 +580,7 @@ Resources:
-               ServiceRole: !GetAtt CodeBuildServiceRole.Arn
-               Source:
-                  Type: CODEPIPELINE
-         -        BuildSpec: pipeline/buildspec_feature.yml
-         +        BuildSpec: projectA/pipeline/buildspec_feature.yml
-         ```
-         ```
-         @@ -614,7 +615,7 @@ Resources:
-               ServiceRole: !GetAtt CodeBuildServiceRole.Arn
-               Source:
-                  Type: CODEPIPELINE
-         -        BuildSpec: pipeline/buildspec_build_package.yml
-         +        BuildSpec: projectA/pipeline/buildspec_build_package.yml
-         ```
-   1. Update buildspec to work in the right folder
-      ```
-      diff --git a/projectA/pipeline/buildspec_build_package.yml b/projectA/pipeline/buildspec_build_package.yml
-      index 537d1d9..bfa6e18 100644
-      --- a/projectA/pipeline/buildspec_build_package.yml
-      +++ b/projectA/pipeline/buildspec_build_package.yml
-      @@ -4,6 +4,7 @@ phases:
-         runtime-versions:
-            python: 3.8
-         commands:
-      +      - cd projectA
-            - pip install --upgrade pip
-            - pip install --upgrade awscli aws-sam-cli
-            # Enable docker https://docs.aws.amazon.com/codebuild/latest/userguide/sample-docker-custom-image.html
-      @@ -21,6 +22,7 @@ phases:
-                           --region ${PROD_REGION}
-                           --output-template-file packaged-prod.yaml
-      artifacts:
-      +  base-directory: projectA
-         files:
-         - packaged-test.yaml
-         - packaged-prod.yaml
-      ```
-   1. Commit and push to git
+      1. Under Parameters, add below params.  One is for the type of resource in the appdev repo and subfoldername is what we will use to name the pipeline. 
+```shell
+ResourceType:
+  Type: String
+  Description: The type of the resource
+  Default: "lambda"
+SubFolderName:
+  Type: String
+  Description: The sub project folder name
+  Default: ""
+```
+  1. Replace FullRepositoryId with "AppFullRepositoryId" as below:
+```shell 
+_AppFullRepositoryId:_
+  Type: String
+  Default: "<YOUR_ALIAS>/sam-pipelines-appdev-monorepo"
+DevOpsFullRepositoryId:
+  Type: String
+  Default: "<YOUR_ALIAS>/sam-pipelines-devops-monorepo"
+```
+     2. Update pipeline cloudformation template location:
+     ```
+     @@ -150,7 +151,7 @@ Resources:
+                    RoleArn: !GetAtt PipelineStackCloudFormationExecutionRole.Arn
+                    StackName: !Ref AWS::StackName
+                    ChangeSetName: !Sub ${AWS::StackName}-ChangeSet
+     -                TemplatePath: SourceCodeAsZip::codepipeline.yaml
+     +                TemplatePath: SourceCodeAsZip::projectA/codepipeline.yaml
+                    Capabilities: CAPABILITY_NAMED_IAM
+     ```
+   1. Add name for the pipeline under Properties for the Pipeline:
+```shell
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      _+Name: !Ref SubFolderName_
+```
+   1. Replace 'Actions' inside Source Stage with below:
+```shell
+            - Name: SourceCodeRepoApp
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: "1"
+              Configuration:
+                ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
+                FullRepositoryId: !Ref AppFullRepositoryId
+                BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+                DetectChanges: false
+              OutputArtifacts:
+                - Name: SourceCodeAsZipApp
+              RunOrder: 1
+            - Name: SourceCodeRepoDevOps
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: "1"
+              Configuration:
+                ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
+                FullRepositoryId: !Ref DevOpsFullRepositoryId
+                BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+                DetectChanges: false
+              OutputArtifacts:
+                - Name: SourceCodeAsZipDevOps
+              RunOrder: 1
+```
+   1. Comment out "UpdatePipeline" and "ExecuteChangeSet" stages
+   2. Replace below inside BuildAndPackage stage:
+```shell
+                InputArtifacts:
+                  - Name: SourceCodeAsZip
+                OutputArtifacts:
+                  - Name: BuildArtifactAsZip
+```
+with:
+```shell
+                  PrimarySource: SourceCodeAsZipDevOps
+                InputArtifacts:
+                  - Name: SourceCodeAsZipApp
+                  - Name: SourceCodeAsZipDevOps
+                OutputArtifacts:
+                  - Name: BuildArtifactAsZip
+```
+   1. Update DeployTest stage to include the following (InputArtifacts, PrimarySource, SubFolderName) and repeat this step for DeployProd stage:
+```shell
+                  ProjectName: !Ref CodeBuildProjectDeploy
+                  PrimarySource: SourceCodeAsZipDevOps
+                  EnvironmentVariables: !Sub |
+                    [
+                      {"name": "ENV_TEMPLATE", "value": "packaged-test.yaml"},
+                      {"name": "ENV_REGION", "value": "${TestingRegion}"},
+                      {"name": "ENV_STACK_NAME", "value": "${TestingStackName}"},
+                      {"name": "ENV_PIPELINE_EXECUTION_ROLE", "value": "${TestingPipelineExecutionRole}"},
+                      {"name": "ENV_CLOUDFORMATION_EXECUTION_ROLE", "value": "${TestingCloudFormationExecutionRole}"},
+                      {"name": "ENV_BUCKET", "value": "${TestingArtifactBucket}"},
+                      {"name": "ENV_SUB_FOLDER_NAME", "value": "${SubFolderName}"},
+                      {"name": "ENV_IMAGE_REPOSITORY", "value": "${TestingImageRepository}"}
+                    ]
+                InputArtifacts:
+                  - Name: BuildArtifactAsZip
+                  - Name: SourceCodeAsZipDevOps
+```
+   1. Update "CodeBuildProjectBuildAndDeployFeature" and "CodeBuildProjectBuildAndPackage" EnvironmentVariables to include:
+```shell
+          - Name: SUB_FOLDER_NAME
+            Value: !Ref SubFolderName
+```
+   1. Update buildspec files.  You can check the diff using `diff -r pipeline.bkp pipeline`
+```shell
+ cp -r pipeline.bkp/* pipeline/
+```
+   2. Commit and push to git for the devops repo changes
       ```
       git add .
-      git commit -m "Add pipeline for projectA"
+      git commit -m "Update pipeline template and buildspec files
       ```
-4. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
-   ```
-   git commit -a -m "update subproject file"
-   git push
-   ```
-5. This will first create the pipeline, if one doesn't exist already for this subproject.  After that the pipeline will get triggered.
-6. If a pipeline already exists, then this will trigger the pipeline for this subproject.
+   3. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
+      ```
+      git commit -a -m "update subproject file"
+      git push
+      ```
+   4. This will first create the pipeline, if one doesn't exist already for this subproject.  After that the pipeline will get triggered.
+   5. If a pipeline already exists, then this will trigger the pipeline for this subproject.
 
 ## Setup new subproject
 Add the subproject into the appdev repo.  git commit any changes and git push.
