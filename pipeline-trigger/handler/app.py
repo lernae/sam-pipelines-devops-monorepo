@@ -1,5 +1,4 @@
 import json
-import boto3
 import time
 
 
@@ -16,7 +15,7 @@ def lambda_handler(event, context):
         print(folderName)
         break
 
-    client = boto3.client('codepipeline')
+    client = codepipeline_client()
     #start the pipeline
     if len(folderName)>0:
         try:
@@ -26,27 +25,19 @@ def lambda_handler(event, context):
             client.start_pipeline_execution(name=folderName) # pipeline runs at first creation so no need to trigger this if creating it first time
         except:
             print('pipeline ', folderName, ' does not exist')
-            cb_client = codebuild_client()
             print('creating pipeline')
             start_codebuild(projectName='create_pipeline',
-                                             envVarList=[
-                                                  {
-                                                      'name': 'ENV_PIPELINE_NAME',
-                                                      'value': folderName,
-                                                      'type': 'PLAINTEXT'
-                                                  },
-                                                  {
-                                                      'name': 'ENV_RESOURCE_TYPE',
-                                                      'value': 'lambda',
-                                                      'type': 'PLAINTEXT'
-                                                  }
-                                             ])
-        print("finished")
+                            envVarList=[
+                                {
+                                    'name': 'ENV_PIPELINE_NAME',
+                                    'value': folderName,
+                                    'type': 'PLAINTEXT'
+                                }
+                            ])
         return {
             'statusCode': 200,
             'body': json.dumps('Modified project in repo:' + folderName)
         }
-    print("finished")
     return {
         'statusCode': 200,
         'body': json.dumps('No modified project in repo')
@@ -78,41 +69,6 @@ def check_build_status(buildId):
         if status == "IN_PROGRESS":
             time.sleep(5)
     return status
-
-
-def start_code_pipeline(pipelineName):
-    client = codepipeline_client()
-    print('starting pipeline ', pipelineName)
-    response = client.start_pipeline_execution(name=pipelineName)
-    print('start_pipeline_execution response ', response)
-    # return True
-
-
-def create_pipeline(pipelineName):
-    client = codebuild_client()
-    print('creating pipeline')
-    response = client.start_build(projectName='create_pipeline',
-                                  environmentVariablesOverride=[
-                                        {
-                                            'name': 'ENV_PIPELINE_NAME',
-                                            'value': pipelineName,
-                                            'type': 'PLAINTEXT'
-                                        }
-                                    ])
-    # return True
-
-
-def exists_pipeline(pipelineName):
-    client = codepipeline_client()
-    print('checking if pipeline ', pipelineName, ' exists')
-    exists = False
-    try:
-        response = client.get_pipeline(name=pipelineName)
-        print('found ', response.pipeline.name)
-        exists = True
-    except:
-        print('pipeline ', pipelineName, ' does not exist')
-    return exists
 
 
 cpclient = None
