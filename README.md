@@ -512,7 +512,7 @@ After this step, feel free to remove pipeline.bkp folder and its contents as the
 ## Setup new subproject
 Add the subproject into the appdev repo.  git commit any changes and git push.
 
-## Cleanup a pipeline during testing
+## Cleanup a pipeline during POC of this sample
 $ sam delete --stack-name <name_of_pipeline_CFN_stack>  --profile cicd
 
 # TODOs
