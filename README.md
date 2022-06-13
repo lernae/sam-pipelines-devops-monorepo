@@ -14,7 +14,7 @@ This repo aims to provide a first implementation of  CI/CD pipelines for mono re
 
 ![mono repo trigger flow](https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2021/04/23/Codepipeline-Sample-Arch.jpg)
 
-Modifications to above diagram:
+This sample has additional modifications from above diagram:
 * In addition, at step 5, if the pipeline does not already exist, a new pipeline gets crated.
 * Separately, the pipeline targets 2 separate accounts, first staging acct followed by prod acct to deploy the app code.
 ## Components
