@@ -506,3 +506,9 @@ $ sam delete --stack-name <name_of_pipeline_CFN_stack>  --profile cicd
 
 # Credit
 This repo is based off of the original sam pipelines monorepo https://github.com/flochaz/sam-pipelines-monorepo with modifications to adapt it to a 2 separate repo approach (one for app code and one for infra related resources)
+
+# Improvements
+* Tighten up permissions for CodeBuild create pipeline and in general check/confirm perms are tight.
+* Determine further tuning the pipeline trigger logic - only trigger on certain types of files, etc.
+* I have tested with main branch only.  Related resources for feature branch may need similar changes as the main branch.
+* Any other improvements to meet additional requirements

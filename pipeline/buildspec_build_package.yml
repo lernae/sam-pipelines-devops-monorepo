@@ -11,11 +11,8 @@ phases:
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
   build:
     commands:
-      - echo ${SUB_FOLDER_NAME} ${SAM_TEMPLATE} ${TESTING_PIPELINE_EXECUTION_ROLE}
       - cd ${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}
       - source ${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}/config.env
-      - env
-      - ls -la
       - sam build --use-container --template ${CODEBUILD_SRC_DIR}/${RESOURCE_TYPE}-${SAM_TEMPLATE} --container-env-var SUB_FOLDER_NAME=${SUB_FOLDER_NAME} --parameter-overrides ParameterKey=SubFolderName,ParameterValue=${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}/${SUB_FOLDER_NAME}
       - . ${CODEBUILD_SRC_DIR}/assume-role.sh ${TESTING_PIPELINE_EXECUTION_ROLE} test-package
       - sam package --s3-bucket ${TESTING_ARTIFACT_BUCKET}
@@ -25,7 +22,6 @@ phases:
       - sam package --s3-bucket ${PROD_ARTIFACT_BUCKET}
                     --region ${PROD_REGION}
                     --output-template-file packaged-prod.yaml
-      - ls -la
 artifacts:
   type: zip
   base-directory: ${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}

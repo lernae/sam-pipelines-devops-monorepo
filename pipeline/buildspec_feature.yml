@@ -11,9 +11,7 @@ phases:
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
   build:
     commands:
-      - echo ${SUB_FOLDER_NAME}
       - source ${CODEBUILD_SRC_DIR_SourceCodeAsZipApp}/config.env
-      - env
       - sam build --use-container --template ${CODEBUILD_SRC_DIR}/${RESOURCE_TYPE}-${SAM_TEMPLATE} --container-env-var SUB_FOLDER_NAME=${SUB_FOLDER_NAME}
       - . ./assume-role.sh ${TESTING_PIPELINE_EXECUTION_ROLE} feature-deploy
       - sam deploy --stack-name $(echo ${FEATURE_BRANCH_NAME} | tr -cd '[a-zA-Z0-9-]')
