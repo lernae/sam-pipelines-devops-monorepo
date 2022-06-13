@@ -506,7 +506,7 @@ Add the subproject into the appdev repo.  git commit any changes and git push.
 
 ## Cleanup a pipeline during POC of this sample if needed
 Use sam to delete the intended CFN stack to delete:
-$ sam delete --stack-name <name_of_pipeline_CFN_stack>  --profile cicd
+`$ sam delete --stack-name <name_of_pipeline_CFN_stack>  --profile cicd`
 
 # Further improvements to the POC
 * Tighten up permissions for CodeBuild create pipeline and in general check/confirm perms are tight.
