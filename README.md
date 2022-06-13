@@ -66,7 +66,7 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
    cd pipeline-trigger
    sam deploy --guided --profile cicd
    ```
-3. Add webhook to your github repo (see "Creating a GitHub webhook" [this blog](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) for more details making sure you selected `Content type` as `application/json` !!!)
+3. Add webhook to your github appdev repo (see "Creating a GitHub webhook" [this blog](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) for more details making sure you selected `Content type` as `application/json` !!!)
 
 ## Bootstrap
 
