@@ -501,7 +501,7 @@ dos2unix: converting file assume-role.sh to Unix format...
 1. This will first create the pipeline, if one doesn't exist already for this subproject.  After that the pipeline will get triggered.
 1. If a pipeline already exists, then this will trigger the pipeline for this subproject.
 
-## Setup new subproject
+## Setup new subproject in app repo
 Add the subproject into the appdev repo.  One way is to copy/paste one of the subfolders with a new name for a quick test. git commit any changes and git push.
 
 ## Cleanup a pipeline during POC of this sample if needed
