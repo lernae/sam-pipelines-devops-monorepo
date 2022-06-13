@@ -317,7 +317,7 @@ Successfully created/updated stack - pipeline-trigger in us-east-1
       Choice []: 3
       What is the full repository id (Example: some-user/my-repo)?: <YOUR_GITHUB_ALIAS>/sam-pipelines-appdev-monorepo
       What is the Git branch used for production deployments? [main]: 
-      What is the template file path? [template.yaml]: lambda-template.yaml
+      What is the template file path? [template.yaml]:
       We use the stage configuration name to automatically retrieve the bootstrapped resources created when you ran `sam pipeline bootstrap`.
 
       Here are the stage configuration names detected in .aws-sam/pipeline/pipelineconfig.toml:
@@ -373,7 +373,6 @@ Successfully created/updated stack - pipeline-trigger in us-east-1
       * Question 4:  Account details: ***test (named profile)***
       * Question 5: region ***UP TO YOU***
       * Question 6: Enter the pipeline IAM user ARN if you have previously created one, or we will create one for you []: ***THE ARN OF THE DUMMY USER CREATED PREVIOUSLY !!!!!!***
-      * Question 7: What is the template file path? [template.yaml]: ***lambda-template.yaml***
       * ... Same for Stage 2 with prod as name and prod named profile
 2. Run `dos2unix.exe assume-role.sh` to ensure it's in unix format as this shell script is used in CodeBuild builds.
 ```shell
@@ -495,10 +494,12 @@ with:
 ```shell
  cp -r pipeline.bkp/* pipeline/
 ```
+After this step, feel free to remove pipeline.bkp folder and its contents as they are the same as pipeline folder now.
    2. Commit and push to git for the devops repo changes
       ```
       git add .
       git commit -m "Update pipeline template and buildspec files
+      git push
       ```
    3. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
       ```

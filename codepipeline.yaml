@@ -49,7 +49,7 @@ Parameters:
     Default: "main"
   SamTemplate:
     Type: String
-    Default: "lambda-template.yaml"
+    Default: "template.yaml"
   TestingRegion:
     Type: String
     Default: "us-east-1"
