@@ -398,10 +398,10 @@ dos2unix: converting file assume-role.sh to Unix format...
       ```shell
       AppFullRepositoryId:
         Type: String
-        Default: "<YOUR_ALIAS>/sam-pipelines-appdev-monorepo"
+        Default: "<YOUR_GITHUB_ALIAS>/sam-pipelines-appdev-monorepo"
       DevOpsFullRepositoryId:
         Type: String
-        Default: "<YOUR_ALIAS>/sam-pipelines-devops-monorepo"
+        Default: "<YOUR_GITHUB_ALIAS>/sam-pipelines-devops-monorepo"
       ```
     * Add the name for the pipeline to be set to the subfolder name under Properties for the Pipeline:
       ```shell
@@ -441,7 +441,7 @@ dos2unix: converting file assume-role.sh to Unix format...
               - Name: SourceCodeAsZipDevOps
             RunOrder: 1
     ```
-    * Comment out "UpdatePipeline" and "ExecuteChangeSet" stages.  These can be used to self mutate the pipeline in the future as needed.
+    * Comment out "UpdatePipeline" and "ExecuteChangeSet" stages.  These can be used to self mutate the pipeline in the future when and if needed.
     * Replace below inside BuildAndPackage stage:
     ```shell
           InputArtifacts:
@@ -449,7 +449,7 @@ dos2unix: converting file assume-role.sh to Unix format...
           OutputArtifacts:
             - Name: BuildArtifactAsZip
     ```
-    * with:
+    * instead with:
     ```shell
       PrimarySource: SourceCodeAsZipDevOps
     InputArtifacts:
@@ -458,7 +458,7 @@ dos2unix: converting file assume-role.sh to Unix format...
     OutputArtifacts:
       - Name: BuildArtifactAsZip
     ```
-    * Update DeployTest stage to include the following (InputArtifacts, PrimarySource, SubFolderName) and repeat this step for DeployProd stage:
+    * Update DeployTest stage to include the following (InputArtifacts, PrimarySource, SubFolderName) and repeat this step for DeployProd stage as well:
     ```shell
                    ProjectName: !Ref CodeBuildProjectDeploy
                    PrimarySource: SourceCodeAsZipDevOps
@@ -482,7 +482,7 @@ dos2unix: converting file assume-role.sh to Unix format...
            - Name: SUB_FOLDER_NAME
              Value: !Ref SubFolderName
     ```
-    * Update buildspec files.  You can check the diff using `diff -r pipeline.bkp pipeline`
+    * Update buildspec files.  You can check the diff using `diff -r pipeline.bkp pipeline` if you wish to see the differences.
     ```shell
      cp -r pipeline.bkp/* pipeline/
     ```
@@ -504,14 +504,16 @@ dos2unix: converting file assume-role.sh to Unix format...
 ## Setup new subproject
 Add the subproject into the appdev repo.  git commit any changes and git push.
 
-## Cleanup a pipeline during POC of this sample
+## Cleanup a pipeline during POC of this sample if needed
+Use sam to delete the intended CFN stack to delete:
 $ sam delete --stack-name <name_of_pipeline_CFN_stack>  --profile cicd
 
-# Credit
-This repo is based off of the original sam pipelines monorepo https://github.com/flochaz/sam-pipelines-monorepo with modifications to adapt it to a 2 separate repo approach (one for app code and one for infra related resources)
-
-# Further improvements
+# Further improvements to the POC
 * Tighten up permissions for CodeBuild create pipeline and in general check/confirm perms are tight.
 * Determine further tuning the pipeline trigger logic - only trigger on certain types of files, etc.
 * I have tested with main branch only.  Related resources for feature branch may need similar changes as the main branch.
 * Any other improvements to meet additional requirements
+
+# Credit
+This repo is based off of the original sam pipelines monorepo https://github.com/flochaz/sam-pipelines-monorepo with modifications to adapt it to a 2 separate repo approach (one for app code and one for infra related resources)
+
