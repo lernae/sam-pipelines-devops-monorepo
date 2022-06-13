@@ -38,15 +38,18 @@ Parameters:
   GitProviderType:
     Type: String
     Default: "GitHub"
-  FullRepositoryId:
+  AppFullRepositoryId:
     Type: String
     Default: "lernae/sam-pipelines-appdev-monorepo"
+  DevOpsFullRepositoryId:
+    Type: String
+    Default: "lernae/sam-pipelines-devops-monorepo"
   MainGitBranch:
     Type: String
     Default: "main"
   SamTemplate:
     Type: String
-    Default: "lambda-template.yaml"
+    Default: "template.yaml"
   TestingRegion:
     Type: String
     Default: "us-east-1"
@@ -55,13 +58,13 @@ Parameters:
     Default: "sam-app"
   TestingPipelineExecutionRole:
     Type: String
-    Default: "arn:aws:iam::363745332518:role/aws-sam-cli-managed-test-pip-PipelineExecutionRole-179RZMWNS57TJ"
+    Default: "arn:aws:iam::357271360943:role/aws-sam-cli-managed-staging-PipelineExecutionRole-PL8IIIT61BAP"
   TestingCloudFormationExecutionRole:
     Type: String
-    Default: "arn:aws:iam::363745332518:role/aws-sam-cli-managed-test-CloudFormationExecutionR-ESRMFXIHWJQY"
+    Default: "arn:aws:iam::357271360943:role/aws-sam-cli-managed-stagi-CloudFormationExecutionR-19YBT5PNU9VJ5"
   TestingArtifactBucket:
     Type: String
-    Default: "aws-sam-cli-managed-test-pipeline-artifactsbucket-gqr702q45nbq"
+    Default: "aws-sam-cli-managed-staging-pipel-artifactsbucket-1tjffybzqx6ci"
   TestingImageRepository:
     Type: String
     # If there are functions with "Image" PackageType in your template,
@@ -76,13 +79,13 @@ Parameters:
     Default: "sam-app"
   ProdPipelineExecutionRole:
     Type: String
-    Default: "arn:aws:iam::357271360943:role/aws-sam-cli-managed-prod-pip-PipelineExecutionRole-JWPC852TWIW"
+    Default: "arn:aws:iam::586770803976:role/aws-sam-cli-managed-prod-pip-PipelineExecutionRole-D5ILXK3H9N85"
   ProdCloudFormationExecutionExeRole:
     Type: String
-    Default: "arn:aws:iam::357271360943:role/aws-sam-cli-managed-prod-CloudFormationExecutionR-1BCSYYIBNM4D0"
+    Default: "arn:aws:iam::586770803976:role/aws-sam-cli-managed-prod-CloudFormationExecutionR-56WRG3TRASVG"
   ProdArtifactBucket:
     Type: String
-    Default: "aws-sam-cli-managed-prod-pipeline-artifactsbucket-b4t1e5bdufjb"
+    Default: "aws-sam-cli-managed-prod-pipeline-artifactsbucket-11rchxaekeooc"
   ProdImageRepository:
     Type: String
     # If there are functions with "Image" PackageType in your template,
@@ -124,6 +127,7 @@ Resources:
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
+      Name: !Ref SubFolderName
       ArtifactStore:
         Location: !Ref PipelineArtifactsBucket
         Type: S3
@@ -132,7 +136,7 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: SourceCodeRepo
+            - Name: SourceCodeRepoApp
               ActionTypeId:
                 Category: Source
                 Owner: AWS
@@ -140,48 +144,66 @@ Resources:
                 Version: "1"
               Configuration:
                 ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
-                FullRepositoryId: !Ref FullRepositoryId
+                FullRepositoryId: !Ref AppFullRepositoryId
                 BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+                DetectChanges: false
               OutputArtifacts:
-                - Name: SourceCodeAsZip
+                - Name: SourceCodeAsZipApp
               RunOrder: 1
-        - Name: UpdatePipeline
-          Actions:
-            - Name: CreateChangeSet
+            - Name: SourceCodeRepoDevOps
               ActionTypeId:
-                Category: Deploy
+                Category: Source
                 Owner: AWS
-                Provider: CloudFormation
+                Provider: CodeStarSourceConnection
                 Version: "1"
               Configuration:
-                ActionMode: CHANGE_SET_REPLACE
-                RoleArn: !GetAtt PipelineStackCloudFormationExecutionRole.Arn
-                StackName: !Ref AWS::StackName
-                ChangeSetName: !Sub ${AWS::StackName}-ChangeSet
-                TemplatePath: SourceCodeAsZip::codepipeline.yaml
-                Capabilities: CAPABILITY_NAMED_IAM
-                ParameterOverrides: !Sub |
-                  {
-                    "FeatureGitBranch": "${FeatureGitBranch}",
-                    "CodeStarConnectionArn": "${CodeStarConnectionArn}"
-                  }
-              InputArtifacts:
-                - Name: SourceCodeAsZip
-              RunOrder: 1
-            - Name: ExecuteChangeSet
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Provider: CloudFormation
-                Version: "1"
-              Configuration:
-                ActionMode: CHANGE_SET_EXECUTE
-                RoleArn: !GetAtt PipelineStackCloudFormationExecutionRole.Arn
-                StackName: !Ref AWS::StackName
-                ChangeSetName: !Sub ${AWS::StackName}-ChangeSet
+                ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
+                FullRepositoryId: !Ref DevOpsFullRepositoryId
+                BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+                DetectChanges: false
               OutputArtifacts:
-                - Name: !Sub ${AWS::StackName}ChangeSet
-              RunOrder: 2
+                - Name: SourceCodeAsZipDevOps
+              RunOrder: 1
+#        - Name: UpdatePipeline
+#          Actions:
+#            - Name: CreateChangeSet
+#              ActionTypeId:
+#                Category: Deploy
+#                Owner: AWS
+#                Provider: CloudFormation
+#                Version: "1"
+#              Configuration:
+#                ActionMode: CHANGE_SET_REPLACE
+#                RoleArn: !GetAtt PipelineStackCloudFormationExecutionRole.Arn
+#                StackName: !Ref AWS::StackName
+#                ChangeSetName: !Sub ${AWS::StackName}-ChangeSet
+#                TemplatePath: SourceCodeAsZipDevOps::codepipeline.yaml
+#                Capabilities: CAPABILITY_NAMED_IAM
+#                ParameterOverrides: !Sub |
+#                  {
+#                    "FeatureGitBranch": "${FeatureGitBranch}",
+#                    "CodeStarConnectionArn": "${CodeStarConnectionArn}",
+#                    "SubFolderName": "${SubFolderName}",
+#                    "SamTemplate": "${SamTemplate}"
+#                  }
+#              InputArtifacts:
+#                - Name: SourceCodeAsZipDevOps
+##                - Name: SourceCodeAsZipApp
+#              RunOrder: 1
+#            - Name: ExecuteChangeSet
+#              ActionTypeId:
+#                Category: Deploy
+#                Owner: AWS
+#                Provider: CloudFormation
+#                Version: "1"
+#              Configuration:
+#                ActionMode: CHANGE_SET_EXECUTE
+#                RoleArn: !GetAtt PipelineStackCloudFormationExecutionRole.Arn
+#                StackName: !Ref AWS::StackName
+#                ChangeSetName: !Sub ${AWS::StackName}-ChangeSet
+#              OutputArtifacts:
+#                - Name: !Sub ${AWS::StackName}ChangeSet
+#              RunOrder: 2
 
         # Uncomment and modify the following step for running the unit-tests
         # - Name: UnitTest
@@ -210,7 +232,8 @@ Resources:
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectBuildAndDeployFeature
                 InputArtifacts:
-                  - Name: SourceCodeAsZip
+                  - Name: SourceCodeAsZipApp
+                  - Name: SourceCodeAsZipDevOps
           - !Ref AWS::NoValue
 
         - !If
@@ -225,8 +248,10 @@ Resources:
                   Version: "1"
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectBuildAndPackage
+                  PrimarySource: SourceCodeAsZipDevOps
                 InputArtifacts:
-                  - Name: SourceCodeAsZip
+                  - Name: SourceCodeAsZipApp
+                  - Name: SourceCodeAsZipDevOps
                 OutputArtifacts:
                   - Name: BuildArtifactAsZip
           - !Ref AWS::NoValue
@@ -243,6 +268,7 @@ Resources:
                   Version: "1"
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectDeploy
+                  PrimarySource: SourceCodeAsZipDevOps
                   EnvironmentVariables: !Sub |
                     [
                       {"name": "ENV_TEMPLATE", "value": "packaged-test.yaml"},
@@ -251,10 +277,12 @@ Resources:
                       {"name": "ENV_PIPELINE_EXECUTION_ROLE", "value": "${TestingPipelineExecutionRole}"},
                       {"name": "ENV_CLOUDFORMATION_EXECUTION_ROLE", "value": "${TestingCloudFormationExecutionRole}"},
                       {"name": "ENV_BUCKET", "value": "${TestingArtifactBucket}"},
+                      {"name": "ENV_SUB_FOLDER_NAME", "value": "${SubFolderName}"},
                       {"name": "ENV_IMAGE_REPOSITORY", "value": "${TestingImageRepository}"}
                     ]
                 InputArtifacts:
                   - Name: BuildArtifactAsZip
+                  - Name: SourceCodeAsZipDevOps
                 RunOrder: 1
               # Uncomment the following step for running the integration tests
               # - Name: IntegrationTest
@@ -291,6 +319,7 @@ Resources:
                 RunOrder: 2 # keeping run order as 2 in case manual approval is enabled
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectDeploy
+                  PrimarySource: SourceCodeAsZipDevOps
                   EnvironmentVariables: !Sub |
                     [
                       {"name": "ENV_TEMPLATE", "value": "packaged-prod.yaml"},
@@ -299,10 +328,12 @@ Resources:
                       {"name": "ENV_PIPELINE_EXECUTION_ROLE", "value": "${ProdPipelineExecutionRole}"},
                       {"name": "ENV_CLOUDFORMATION_EXECUTION_ROLE", "value": "${ProdCloudFormationExecutionExeRole}"},
                       {"name": "ENV_BUCKET", "value": "${ProdArtifactBucket}"},
+                      {"name": "ENV_SUB_FOLDER_NAME", "value": "${SubFolderName}"},
                       {"name": "ENV_IMAGE_REPOSITORY", "value": "${ProdImageRepository}"}
                     ]
                 InputArtifacts:
                   - Name: BuildArtifactAsZip
+                  - Name: SourceCodeAsZipDevOps
           - !Ref AWS::NoValue
 
   PipelineArtifactsBucket:
@@ -584,6 +615,8 @@ Resources:
             Value: !Ref TestingImageRepository
           - Name: FEATURE_BRANCH_NAME
             Value: !Ref FeatureGitBranch
+          - Name: SUB_FOLDER_NAME
+            Value: !Ref SubFolderName
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: CODEPIPELINE
@@ -603,6 +636,8 @@ Resources:
         EnvironmentVariables:
           - Name: SAM_TEMPLATE
             Value: !Ref SamTemplate
+          - Name: SUB_FOLDER_NAME
+            Value: !Ref SubFolderName
           - Name: TESTING_REGION
             Value: !Ref TestingRegion
           - Name: PROD_REGION

@@ -14,14 +14,12 @@ This repo aims to provide a first implementation of  CI/CD pipelines for mono re
 
 ![mono repo trigger flow](https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2021/04/23/Codepipeline-Sample-Arch.jpg)
 
-#TODO Add Multi account structure diagram with CI/CD account, staging and prod
-
 ## Components
-* devops repo: this repo
-   * pipeline-trigger`: the implementation of this [blog post](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) to be able to trigger the right pipeline based on what changed
+* devops repo (this repo) contains:
+   * pipeline-trigger: the implementation of this [blog post](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) to be able to trigger the right pipeline based on what changed
    * pipeline buildspec files and pipeline template
    * sub project common template
-* appdev repo: sister repo at github.com/lernae/sam-pipelines-appdev-monorepo/
+* appdev repo (github.com/lernae/sam-pipelines-appdev-monorepo/) contains:
    * `projectX`: the folder containing the code for the SAM app (`src/`)
 
 # Usage
@@ -30,7 +28,7 @@ This repo aims to provide a first implementation of  CI/CD pipelines for mono re
 
 * [SAM cli](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 * A github account
-* one or more AWS Accounts (preferably 3: one for CI/CD pipeline hosting, one for staging/QA and one for Prod)
+* one or more AWS Accounts (preferably 3: one hosting the CI/CD pipeline and related resources, one for staging and one for Prod)
 
 
 1. Fork [this repo](https://github.com/lernae/sam-pipelines-devops-monorepo/) and the [appdev repo](https://github.com/lernae/sam-pipelines-appdev-monorepo/)
@@ -39,34 +37,98 @@ This repo aims to provide a first implementation of  CI/CD pipelines for mono re
    cd sam-pipelines-devops-monorepo
    ```
 1. Setup your different aws profile for each account. For below steps, we have set up:
-* `dev` profile will point to `dev` account, 
 * `cicd` profile to the account hosting the pipeline, pipeline trigger, sub project templates
 * `staging` profile for the first stage of deployment 
 * `prod` profile for the second stage of deployment
-
-
 
 ## Setup Mono repo pipeline trigger (deployed in ci/cd account) 
 1. Create a CodeStarConnection for connecting to the GitHub repo's.
 ```shell
 aws codestar-connections create-connection --provider-type GitHub --connection-name GitRepositoryConnection --profile cicd
-# Go to aws console -> CodePipeline -> Settings -> Connections -> select this newly created connection and then pick "Update pending connection" on top right.
-# Follow the prompts "Install a new app" -> pick the github namespace -> Configure and follow prompts for "Repository access".  
-# Select both appdev and devops repositories then hit "save".  Then you will be redirected back to the "Connect to Github" window.  Here click on "Connect"
-# Ensure the recently created connection now has status listed as "available"
+# Go to aws console -> CodePipeline -> Settings -> [Connections](https://us-east-1.console.aws.amazon.com/codesuite/settings/connections) -> select this newly created connection with name "GitRepositoryConnection" and then pick "Update pending connection" on top right.
+# Click on "Install a new app" -> pick the github namespace -> Configure and follow prompts for "Repository access".  
+# Select both appdev and devops repositories under "Only select repositories" under "Repository access" then hit "save".  Then you will be redirected back to the "Connect to Github" window.  Here click on "Connect"
+# Ensure the recently created connection now has status set to "Available"
 ```
-Click on the connection and copy its ARN.  Update below line with your ARN for the connection in template.yaml inside the pipeline-trigger folder.
+Click on the connection and copy its ARN.  Go to template.yaml inside the pipeline-trigger folder in the devops repo.  Update below line with your ARN for the connection in "Parameters" section:
 ```
  CodeStarConnectionArn:
     Type: String
     Default: "arn:aws:codestar-connections:<your-cicd-region>:<your-cicd-account>:connection/your-connection" 
 ```
-2. Deploy the pipeline trigger.  For this, accept defaults (hit enter) except for "PipelineTriggerFunction may not have authorization defined, Is this okay? [y/N]: y" where you enter 'y'
+2. Deploy the pipeline trigger.  First, remove s3_bucket and parameter_overrides from samconfig.toml under pipeline-trigger folder.  These will get added after you run the next command.
+Then run below, accept defaults (hit enter) except for "PipelineTriggerFunction may not have authorization defined, Is this okay? [y/N]: y" where you enter 'y'
    ```
    cd pipeline-trigger
    sam deploy --guided --profile cicd
    ```
-3. Add webhook to your github appdev repo (see "Creating a GitHub webhook" [this blog](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) for more details making sure you selected `Content type` as `application/json` !!!)
+Going through the prompts, will look as the following:
+```shell
+
+$ sam deploy --guided --profile cicd
+
+Configuring SAM deploy
+======================
+
+        Looking for config file [samconfig.toml] :  Found
+        Reading default arguments  :  Success
+
+        Setting default arguments for 'sam deploy'
+        =========================================
+        Stack Name [pipeline-trigger]:
+        AWS Region [us-east-1]:
+        Parameter PipelineName []:
+        Parameter CodeStarConnectionArn [arn:aws:codestar-connections:us-east-1:<your-cicd-acct>:connection/<conn-id>]:
+        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
+        Confirm changes before deploy [Y/n]:
+        #SAM needs permission to be able to create roles to connect to the resources in your template
+        Allow SAM CLI IAM role creation [Y/n]:
+        #Preserves the state of previously provisioned resources when an operation fails
+        Disable rollback [y/N]:
+        PipelineTriggerFunction may not have authorization defined, Is this okay? [y/N]: y
+        Save arguments to configuration file [Y/n]:
+        SAM configuration file [samconfig.toml]:
+        SAM configuration environment [default]:
+
+```
+This created a CloudFormation stack in your ci/cd account named 'pipeline-trigger' and it will not deploy until you confirm you want to deploy the changes as per next step.
+Next, enter 'y' when asked to "Deploy this changeset?" as below
+```shell
+CloudFormation stack changeset
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Operation                                                                     LogicalResourceId                                                             ResourceType                                                                  Replacement
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
++ Add                                                                         CodeBuildServiceRole                                                          AWS::IAM::Role                                                                N/A
++ Add                                                                         PipelineTriggerCreatePipelineTask                                             AWS::CodeBuild::Project                                                       N/A
++ Add                                                                         PipelineTriggerFunctionPipelineTriggerPermissionProd                          AWS::Lambda::Permission                                                       N/A
++ Add                                                                         PipelineTriggerFunctionRole                                                   AWS::IAM::Role                                                                N/A
++ Add                                                                         PipelineTriggerFunction                                                       AWS::Lambda::Function                                                         N/A
++ Add                                                                         ServerlessRestApiDeployment565c0f068a                                         AWS::ApiGateway::Deployment                                                   N/A
++ Add                                                                         ServerlessRestApiProdStage                                                    AWS::ApiGateway::Stage                                                        N/A
++ Add                                                                         ServerlessRestApi                                                             AWS::ApiGateway::RestApi                                                      N/A
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Changeset created successfully. arn:aws:cloudformation:us-east-1:586770803976:changeSet/samcli-deploy1655130726/1190ea5d-5d26-474e-a207-6cc43f3fe095
+
+
+Previewing CloudFormation changeset before deployment
+======================================================
+Deploy this changeset? [y/N]:y
+```
+Upon successful deployment of the pipeline trigger, you will see:
+```shell
+CloudFormation outputs from deployed stack
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Outputs
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Key                 PipelineTriggerApi
+Description         API Gateway endpoint URL for Prod stage for Pipeline Trigger function
+Value               https://abcd123.execute-api.<region>.amazonaws.com/Prod/
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Successfully created/updated stack - pipeline-trigger in us-east-1
+```
+3. Add webhook to your  appdev github repo using the API GW endpoint URL from prev step (see "Creating a GitHub webhook" [this blog](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) for more details making sure you selected `Content type` as `application/json` !!!)
 
 ## Bootstrap
 
@@ -75,7 +137,7 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
       ```bash
       aws iam create-user --user-name "dummy-aws-sam-cli-user" --profile cicd
       ```
-   1. Bootstrap cicd accounts
+   1. Bootstrap cicd accounts.  Ensure you are inside the root directory in the devops repo shadow. If inside pipeline-trigger folder, `cd .. ` first.
       ```bash
       sam pipeline init --bootstrap
       ```
@@ -141,7 +203,7 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
       Select a credential source to associate with this stage: 4
       Associated account <TEST ACCOUNT ID> with configuration test.
 
-      Enter the region in which you want these resources to be created [eu-west-3]: 
+      Enter the region in which you want these resources to be created [us-east-1]: 
       Enter the pipeline IAM user ARN if you have previously created one, or we will create one for you []: arn:aws:iam::<CICD ACCOUNT ID>:user/dummy-aws-sam-cli-user
 
       [3] Reference application build resources
@@ -154,7 +216,7 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
       Below is the summary of the answers:
             1 - Account: <TEST ACCOUNT ID>
             2 - Stage configuration name: test
-            3 - Region: eu-west-3
+            3 - Region: us-east-1
             4 - Pipeline user ARN: arn:aws:iam::<CICD ACCOUNT ID>:user/dummy-aws-sam-cli-user
             5 - Pipeline execution role: [to be created]
             6 - CloudFormation execution role: [to be created]
@@ -211,8 +273,8 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
       Associated account <PROD ACCOUNT ID> with configuration prod.
 
 
-      Enter the region in which you want these resources to be created [eu-west-3]: 
-      Pipeline IAM user ARN: arn:aws:iam::<TEST ACCOUNT ID>:user/aws-sam-cli-managed-test-pipeline-res-PipelineUser-1K08W3GS4AA5Z
+      Enter the region in which you want these resources to be created [us-east-1]: 
+      Pipeline IAM user ARN: arn:aws:iam::<CICD ACCOUNT ID>:user/dummy-aws-sam-cli-user
 
       [3] Reference application build resources
       Enter the pipeline execution role ARN if you have previously created one, or we will create one for you []: 
@@ -224,8 +286,8 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
       Below is the summary of the answers:
             1 - Account: <PROD ACCOUNT ID>
             2 - Stage configuration name: prod
-            3 - Region: eu-west-3
-            4 - Pipeline user ARN: arn:aws:iam::<TEST ACCOUNT ID>:user/aws-sam-cli-managed-test-pipeline-res-PipelineUser-1K08W3GS4AA5Z
+            3 - Region: us-east-1
+            4 - Pipeline user ARN: arn:aws:iam::<CICD ACCOUNT ID>:user/dummy-aws-sam-cli-user
             5 - Pipeline execution role: [to be created]
             6 - CloudFormation execution role: [to be created]
             7 - Artifacts bucket: [to be created]
@@ -253,9 +315,9 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
             3 - GitHub
             4 - GitHubEnterpriseServer
       Choice []: 3
-      What is the full repository id (Example: some-user/my-repo)?: flochaz/sam-pipelines-monorepo
+      What is the full repository id (Example: some-user/my-repo)?: <YOUR_GITHUB_ALIAS>/sam-pipelines-appdev-monorepo
       What is the Git branch used for production deployments? [main]: 
-      What is the template file path? [template.yaml]: template.yaml
+      What is the template file path? [template.yaml]: lambda-template.yaml
       We use the stage configuration name to automatically retrieve the bootstrapped resources created when you ran `sam pipeline bootstrap`.
 
       Here are the stage configuration names detected in .aws-sam/pipeline/pipelineconfig.toml:
@@ -286,14 +348,14 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
             What is the CloudFormation execution role ARN for stage 1?: arn:aws:iam::<TEST ACCOUNT ID>:role/aws-sam-cli-managed-test-CloudFormationExecutionR-1BGDI9HEH35O
             What is the S3 bucket name for artifacts for stage 1?: aws-sam-cli-managed-test-pipeline-artifactsbucket-au1hjr2128bw
             What is the ECR repository URI for stage 1?: 
-            What is the AWS region for stage 1?: eu-west-3
+            What is the AWS region for stage 1?: us-east-1
             Select an index or enter the stage 2's configuration name (as provided during the bootstrapping): 2
             What is the sam application stack name for stage 2?: sam-app
             What is the pipeline execution role ARN for stage 2?: arn:aws:iam::<PROD ACCOUNT ID>:role/aws-sam-cli-managed-prod-pip-PipelineExecutionRole-125II9ETGPTND
             What is the CloudFormation execution role ARN for stage 2?: arn:aws:iam::<PROD ACCOUNT ID>:role/aws-sam-cli-managed-prod-CloudFormationExecutionR-1X9T0LS7UEXZO
             What is the S3 bucket name for artifacts for stage 2?: aws-sam-cli-managed-prod-pipeline-artifactsbucket-204szu1b7wru
             What is the ECR repository URI for stage 2?: 
-            What is the AWS region for stage 2?: eu-west-3
+            What is the AWS region for stage 2?: us-east-1
 
       Successfully created the pipeline configuration file(s):
             - codepipeline.yaml
@@ -312,9 +374,14 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
       * Question 5: region ***UP TO YOU***
       * Question 6: Enter the pipeline IAM user ARN if you have previously created one, or we will create one for you []: ***THE ARN OF THE DUMMY USER CREATED PREVIOUSLY !!!!!!***
       * ... Same for Stage 2 with prod as name and prod named profile
-2. Update your pipeline for Mono repo support
+2. Run `dos2unix.exe assume-role.sh` to ensure it's in unix format as this shell script is used in CodeBuild builds.
+```shell
+$ dos2unix.exe assume-role.sh
+dos2unix: converting file assume-role.sh to Unix format...
+```
+3. Update your pipeline for Mono repo support
    1. Update `codepipeline.yaml`
-      1. Name your pipeline following sub project folder name 
+      1. Under Parameters add below to name your pipeline following sub project folder name 
          ```
             Pipeline:
             Type: AWS::CodePipeline::Pipeline
@@ -376,13 +443,13 @@ Click on the connection and copy its ARN.  Update below line with your ARN for t
       git add .
       git commit -m "Add pipeline for projectA"
       ```
-3. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
+4. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
    ```
    git commit -a -m "update subproject file"
    git push
    ```
-4. This will first create the pipeline, if one doesn't exist already for this subproject.  After that the pipeline will get triggered.
-5. If a pipeline already exists, then this will trigger the pipeline for this subproject.
+5. This will first create the pipeline, if one doesn't exist already for this subproject.  After that the pipeline will get triggered.
+6. If a pipeline already exists, then this will trigger the pipeline for this subproject.
 
 ## Setup new subproject
 Add the subproject into the appdev repo.  git commit any changes and git push.
