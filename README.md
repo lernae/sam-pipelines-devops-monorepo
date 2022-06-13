@@ -512,6 +512,9 @@ After this step, feel free to remove pipeline.bkp folder and its contents as the
 ## Setup new subproject
 Add the subproject into the appdev repo.  git commit any changes and git push.
 
+## Cleanup a pipeline during testing
+$ sam delete --stack-name <name_of_pipeline_CFN_stack>  --profile cicd
+
 # TODOs
 - [ ] Improve doc around what needs to be edited (codepipeline.yaml vs. folder names, trust relation ship, disable change detection)
 - [ ] Fix trust relationship https://github.com/aws/aws-sam-cli/issues/3857 -- Please check the trust relationship in the prod account and ensure it has the correct account no. This is a one time task.
