@@ -91,7 +91,7 @@ Configuring SAM deploy
         SAM configuration environment [default]:
 
 ```
-This created a CloudFormation stack in your ci/cd account named 'pipeline-trigger' and it will not deploy until you confirm you want to deploy the changes as per next step.
+This creates a CloudFormation stack in your ci/cd account named 'pipeline-trigger' and it will not deploy until you confirm you want to deploy the changes as per next step.
 Next, enter 'y' when asked to "Deploy this changeset?" as below
 ```shell
 CloudFormation stack changeset
@@ -128,7 +128,7 @@ Value               https://abcd123.execute-api.<region>.amazonaws.com/Prod/
 
 Successfully created/updated stack - pipeline-trigger in us-east-1
 ```
-3. Add webhook to your  appdev github repo using the API GW endpoint URL from prev step (see "Creating a GitHub webhook" [this blog](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) for more details making sure you selected `Content type` as `application/json` !!!)
+3. Add webhook to your appdev github repo using the API GW endpoint URL from prev step's outputs (see "Creating a GitHub webhook" [this blog](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) for more details making sure you selected `Content type` as `application/json` !!!)
 
 ## Bootstrap
 
@@ -374,130 +374,129 @@ Successfully created/updated stack - pipeline-trigger in us-east-1
       * Question 5: region ***UP TO YOU***
       * Question 6: Enter the pipeline IAM user ARN if you have previously created one, or we will create one for you []: ***THE ARN OF THE DUMMY USER CREATED PREVIOUSLY !!!!!!***
       * ... Same for Stage 2 with prod as name and prod named profile
-2. Run `dos2unix.exe assume-role.sh` to ensure it's in unix format as this shell script is used in CodeBuild builds.
+2. If on Windows, also run `dos2unix.exe assume-role.sh` to ensure assume-role.sh is in unix format as this shell script is used in CodeBuild builds (that we chose to run on Linux).
 ```shell
 $ dos2unix.exe assume-role.sh
 dos2unix: converting file assume-role.sh to Unix format...
 ```
-3. Update your pipeline for Mono repo support.  For reference, check codepipeline.yaml.bkp file.
-   1. Update `codepipeline.yaml`
-      1. Under Parameters, add below params.  One is for the type of resource in the appdev repo and subfoldername is what we will use to name the pipeline. 
-    ```shell
-    ResourceType:
-      Type: String
-      Description: The type of the resource
-      Default: "lambda"
-    SubFolderName:
-      Type: String
-      Description: The sub project folder name
-      Default: ""
-    ```
-      1. Replace FullRepositoryId as below (one for app and one for devops repo):
-    ```shell 
-    AppFullRepositoryId:
-      Type: String
-      Default: "<YOUR_ALIAS>/sam-pipelines-appdev-monorepo"
-    DevOpsFullRepositoryId:
-      Type: String
-      Default: "<YOUR_ALIAS>/sam-pipelines-devops-monorepo"
-    ```
-      1. Add name for the pipeline under Properties for the Pipeline:
-    ```shell
+3. Update your pipeline for Mono repo support.  For reference, check codepipeline.yaml.bkp file. Update `codepipeline.yaml`
+    * Under Parameters, add below params.  One is for the type of resource in the appdev repo and subfoldername is what we will use to name the pipeline. 
+      ```shell
+      ResourceType:
+        Type: String
+        Description: The type of the resource
+        Default: "lambda"
+      SubFolderName:
+        Type: String
+        Description: The sub project folder name
+        Default: ""
+      ```
+    * Replace FullRepositoryId as below (one for app and one for devops repo):
+      ```shell
+      AppFullRepositoryId:
+        Type: String
+        Default: "<YOUR_ALIAS>/sam-pipelines-appdev-monorepo"
+      DevOpsFullRepositoryId:
+        Type: String
+        Default: "<YOUR_ALIAS>/sam-pipelines-devops-monorepo"
+      ```
+    * Add the name for the pipeline to be set to the subfolder name under Properties for the Pipeline:
+      ```shell
       Pipeline:
         Type: AWS::CodePipeline::Pipeline
         Properties:
-          Name: !Ref SubFolderName
-    ```
-      1. Replace 'Actions' inside Source Stage with below:
+       Name: !Ref SubFolderName
+      ```
+    * Replace 'Actions' inside Source Stage with below:
     ```shell
-                - Name: SourceCodeRepoApp
-                  ActionTypeId:
-                    Category: Source
-                    Owner: AWS
-                    Provider: CodeStarSourceConnection
-                    Version: "1"
-                  Configuration:
-                    ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
-                    FullRepositoryId: !Ref AppFullRepositoryId
-                    BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
-                    DetectChanges: false
-                  OutputArtifacts:
-                    - Name: SourceCodeAsZipApp
-                  RunOrder: 1
-                - Name: SourceCodeRepoDevOps
-                  ActionTypeId:
-                    Category: Source
-                    Owner: AWS
-                    Provider: CodeStarSourceConnection
-                    Version: "1"
-                  Configuration:
-                    ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
-                    FullRepositoryId: !Ref DevOpsFullRepositoryId
-                    BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
-                    DetectChanges: false
-                  OutputArtifacts:
-                    - Name: SourceCodeAsZipDevOps
-                  RunOrder: 1
+          - Name: SourceCodeRepoApp
+            ActionTypeId:
+              Category: Source
+              Owner: AWS
+              Provider: CodeStarSourceConnection
+              Version: "1"
+            Configuration:
+              ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
+              FullRepositoryId: !Ref AppFullRepositoryId
+              BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+              DetectChanges: false
+            OutputArtifacts:
+              - Name: SourceCodeAsZipApp
+            RunOrder: 1
+          - Name: SourceCodeRepoDevOps
+            ActionTypeId:
+              Category: Source
+              Owner: AWS
+              Provider: CodeStarSourceConnection
+              Version: "1"
+            Configuration:
+              ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
+              FullRepositoryId: !Ref DevOpsFullRepositoryId
+              BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+              DetectChanges: false
+            OutputArtifacts:
+              - Name: SourceCodeAsZipDevOps
+            RunOrder: 1
     ```
-      1. Comment out "UpdatePipeline" and "ExecuteChangeSet" stages
-      1. Replace below inside BuildAndPackage stage:
+    * Comment out "UpdatePipeline" and "ExecuteChangeSet" stages
+    * Replace below inside BuildAndPackage stage:
     ```shell
-                    InputArtifacts:
-                      - Name: SourceCodeAsZip
-                    OutputArtifacts:
-                      - Name: BuildArtifactAsZip
+          InputArtifacts:
+            - Name: SourceCodeAsZip
+          OutputArtifacts:
+            - Name: BuildArtifactAsZip
     ```
-with:
+    * with:
     ```shell
-                      PrimarySource: SourceCodeAsZipDevOps
-                    InputArtifacts:
-                      - Name: SourceCodeAsZipApp
-                      - Name: SourceCodeAsZipDevOps
-                    OutputArtifacts:
-                      - Name: BuildArtifactAsZip
+      PrimarySource: SourceCodeAsZipDevOps
+    InputArtifacts:
+      - Name: SourceCodeAsZipApp
+      - Name: SourceCodeAsZipDevOps
+    OutputArtifacts:
+      - Name: BuildArtifactAsZip
     ```
-      1. Update DeployTest stage to include the following (InputArtifacts, PrimarySource, SubFolderName) and repeat this step for DeployProd stage:
+    * Update DeployTest stage to include the following (InputArtifacts, PrimarySource, SubFolderName) and repeat this step for DeployProd stage:
     ```shell
-                      ProjectName: !Ref CodeBuildProjectDeploy
-                      PrimarySource: SourceCodeAsZipDevOps
-                      EnvironmentVariables: !Sub |
-                        [
-                          {"name": "ENV_TEMPLATE", "value": "packaged-test.yaml"},
-                          {"name": "ENV_REGION", "value": "${TestingRegion}"},
-                          {"name": "ENV_STACK_NAME", "value": "${TestingStackName}"},
-                          {"name": "ENV_PIPELINE_EXECUTION_ROLE", "value": "${TestingPipelineExecutionRole}"},
-                          {"name": "ENV_CLOUDFORMATION_EXECUTION_ROLE", "value": "${TestingCloudFormationExecutionRole}"},
-                          {"name": "ENV_BUCKET", "value": "${TestingArtifactBucket}"},
-                          {"name": "ENV_SUB_FOLDER_NAME", "value": "${SubFolderName}"},
-                          {"name": "ENV_IMAGE_REPOSITORY", "value": "${TestingImageRepository}"}
-                        ]
-                    InputArtifacts:
-                      - Name: BuildArtifactAsZip
-                      - Name: SourceCodeAsZipDevOps
+                   ProjectName: !Ref CodeBuildProjectDeploy
+                   PrimarySource: SourceCodeAsZipDevOps
+                   EnvironmentVariables: !Sub |
+                     [
+                       {"name": "ENV_TEMPLATE", "value": "packaged-test.yaml"},
+                       {"name": "ENV_REGION", "value": "${TestingRegion}"},
+                       {"name": "ENV_STACK_NAME", "value": "${TestingStackName}"},
+                       {"name": "ENV_PIPELINE_EXECUTION_ROLE", "value": "${TestingPipelineExecutionRole}"},
+                       {"name": "ENV_CLOUDFORMATION_EXECUTION_ROLE", "value": "${TestingCloudFormationExecutionRole}"},
+                       {"name": "ENV_BUCKET", "value": "${TestingArtifactBucket}"},
+                       {"name": "ENV_SUB_FOLDER_NAME", "value": "${SubFolderName}"},
+                       {"name": "ENV_IMAGE_REPOSITORY", "value": "${TestingImageRepository}"}
+                     ]
+                 InputArtifacts:
+                   - Name: BuildArtifactAsZip
+                   - Name: SourceCodeAsZipDevOps
     ```
-      1. Update "CodeBuildProjectBuildAndDeployFeature" and "CodeBuildProjectBuildAndPackage" EnvironmentVariables to include:
+    * Update "CodeBuildProjectBuildAndDeployFeature" and "CodeBuildProjectBuildAndPackage" EnvironmentVariables to include:
     ```shell
-              - Name: SUB_FOLDER_NAME
-                Value: !Ref SubFolderName
+           - Name: SUB_FOLDER_NAME
+             Value: !Ref SubFolderName
     ```
-      1. Update buildspec files.  You can check the diff using `diff -r pipeline.bkp pipeline`
+    * Update buildspec files.  You can check the diff using `diff -r pipeline.bkp pipeline`
     ```shell
      cp -r pipeline.bkp/* pipeline/
     ```
-After this step, feel free to remove pipeline.bkp folder and its contents as they are the same as pipeline folder now.
-   2. Commit and push to git for the devops repo changes
-      ```
-      git add .
-      git commit -m "Update pipeline template and buildspec files
-      git push
-      ```
-   3. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
-      ```
-      git commit -a -m "update subproject file"
-      git push
-      ```
-   4. This will first create the pipeline, if one doesn't exist already for this subproject.  After that the pipeline will get triggered.
-   5. If a pipeline already exists, then this will trigger the pipeline for this subproject.
+    * After this step, feel free to remove pipeline.bkp folder and its contents as they are the same as pipeline folder now.
+1. Commit and push to git for the devops repo changes
+    ```
+    git add .
+    git commit -m "Update pipeline template and buildspec files
+    git push
+    ```
+1. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
+    ```
+    git commit -a -m "update subproject file"
+    git push
+    ```
+1. This will first create the pipeline, if one doesn't exist already for this subproject.  After that the pipeline will get triggered.
+1. If a pipeline already exists, then this will trigger the pipeline for this subproject.
 
 ## Setup new subproject
 Add the subproject into the appdev repo.  git commit any changes and git push.
