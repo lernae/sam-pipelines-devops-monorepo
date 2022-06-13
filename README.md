@@ -438,7 +438,7 @@ dos2unix: converting file assume-role.sh to Unix format...
               - Name: SourceCodeAsZipDevOps
             RunOrder: 1
     ```
-    * Comment out "UpdatePipeline" and "ExecuteChangeSet" stages
+    * Comment out "UpdatePipeline" and "ExecuteChangeSet" stages.  These can be used to self mutate the pipeline in the future as needed.
     * Replace below inside BuildAndPackage stage:
     ```shell
           InputArtifacts:
@@ -487,7 +487,7 @@ dos2unix: converting file assume-role.sh to Unix format...
 1. Commit and push to git for the devops repo changes
     ```
     git add .
-    git commit -m "Update pipeline template and buildspec files
+    git commit -m "Update pipeline template and buildspec files"
     git push
     ```
 1. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
