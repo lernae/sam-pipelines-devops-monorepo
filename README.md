@@ -17,13 +17,12 @@ This repo aims to provide a first implementation of  CI/CD pipelines for mono re
 #TODO Add Multi account structure diagram with CI/CD account, staging and prod
 
 ## Components
-
-* `pipeline-trigger`: the implementation of this [blog post](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) to be able to trigger the right pipeline based on what changed
-<!-- * `common-pipeline` an example on how you can potentially share the same pipeline config accross project -->
-* `projectX`: the sub project folder containing the SAM app to deploy including it's pipeline (`codepipeline.yaml`, `pipeline/`, `.aws-sam/pipelineconfig.toml`), it's business logic code (`hello_world/`) and it's dependent infrastructure (`template.yaml`)
-
-
-
+* devops repo: this repo
+   * pipeline-trigger`: the implementation of this [blog post](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) to be able to trigger the right pipeline based on what changed
+   * pipeline buildspec files and pipeline template
+   * sub project common template
+* appdev repo: sister repo at github.com/lernae/sam-pipelines-appdev-monorepo/
+   * `projectX`: the folder containing the code for the SAM app (`src/`)
 
 # Usage
 
@@ -34,35 +33,43 @@ This repo aims to provide a first implementation of  CI/CD pipelines for mono re
 * one or more AWS Accounts (preferably 3: one for CI/CD pipeline hosting, one for staging/QA and one for Prod)
 
 
-1. Fork repo: https://github.com/flochaz/sam-pipelines-monorepo/fork
+1. Fork [this repo](https://github.com/lernae/sam-pipelines-devops-monorepo/) and the [appdev repo](https://github.com/lernae/sam-pipelines-appdev-monorepo/)
    ```
-   git clone https://github.com/<YOUR ALIAS>/sam-pipelines-monorepo.git
-   cd sam-pipelines-monorepo
+   git clone https://github.com/<YOUR ALIAS>/sam-pipelines-devops-monorepo.git
+   cd sam-pipelines-devops-monorepo
    ```
-1. Setup your different aws profile for each account. In this instruction
+1. Setup your different aws profile for each account. For below steps, we have set up:
 * `dev` profile will point to `dev` account, 
-* `cicd` profile to the account hosting the pipeline trigger and all the sub project pipeline
-* `staging` profile for the first stage of deployment of the projects pipelines
+* `cicd` profile to the account hosting the pipeline, pipeline trigger, sub project templates
+* `staging` profile for the first stage of deployment 
 * `prod` profile for the second stage of deployment
 
 
 
 ## Setup Mono repo pipeline trigger (deployed in ci/cd account) 
-
-1. Deploy the pipeline trigger
+1. Create a CodeStarConnection for connecting to the GitHub repo's.
+```shell
+aws codestar-connections create-connection --provider-type GitHub --connection-name GitRepositoryConnection --profile cicd
+# Go to aws console -> CodePipeline -> Settings -> Connections -> select this newly created connection and then pick "Update pending connection" on top right.
+# Follow the prompts "Install a new app" -> pick the github namespace -> Configure and follow prompts for "Repository access".  
+# Select both appdev and devops repositories then hit "save".  Then you will be redirected back to the "Connect to Github" window.  Here click on "Connect"
+# Ensure the recently created connection now has status listed as "available"
+```
+Click on the connection and copy its ARN.  Update below line with your ARN for the connection in template.yaml inside the pipeline-trigger folder.
+```
+ CodeStarConnectionArn:
+    Type: String
+    Default: "arn:aws:codestar-connections:<your-cicd-region>:<your-cicd-account>:connection/your-connection" 
+```
+2. Deploy the pipeline trigger.  For this, accept defaults (hit enter) except for "PipelineTriggerFunction may not have authorization defined, Is this okay? [y/N]: y" where you enter 'y'
    ```
    cd pipeline-trigger
    sam deploy --guided --profile cicd
    ```
-1. Add webhook to your github repo (see "Creating a GitHub webhook" [this blog](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) for more details making sure you selected `Content type` as `application/json` !!!)
+3. Add webhook to your github repo (see "Creating a GitHub webhook" [this blog](https://aws.amazon.com/blogs/devops/integrate-github-monorepo-with-aws-codepipeline-to-run-project-specific-ci-cd-pipelines/) for more details making sure you selected `Content type` as `application/json` !!!)
 
-## Use projectA example
+## Bootstrap
 
-1. (optional) Deploy projectA to your dev account. This will deploy your workload infrastructure
-   ```
-   cd projectA
-   sam deploy --guided --profile dev
-   ```
 1. Bootstrap your accounts
    1. create a dummy user into CI/CD account (to work around https://github.com/aws/aws-sam-cli/issues/3857)
       ```bash
@@ -305,18 +312,14 @@ This repo aims to provide a first implementation of  CI/CD pipelines for mono re
       * Question 5: region ***UP TO YOU***
       * Question 6: Enter the pipeline IAM user ARN if you have previously created one, or we will create one for you []: ***THE ARN OF THE DUMMY USER CREATED PREVIOUSLY !!!!!!***
       * ... Same for Stage 2 with prod as name and prod named profile
-1. Update your pipeline for Mono repo support
-   1. Update `projectA/codepipeline.yaml`
-      1. Name your pipeline following sub project folder name (`projectA` here)
+2. Update your pipeline for Mono repo support
+   1. Update `codepipeline.yaml`
+      1. Name your pipeline following sub project folder name 
          ```
-         @@ -116,6 +116,7 @@ Resources:
             Pipeline:
             Type: AWS::CodePipeline::Pipeline
             Properties:
-         +      Name: 'projectA'
-               ArtifactStore:
-                  Location: !Ref PipelineArtifactsBucket
-                  Type: S3
+         +      Name: !Ref SubFolderName
          ```
       1. Update pipeline cloudformation template location:
          ```
@@ -373,33 +376,18 @@ This repo aims to provide a first implementation of  CI/CD pipelines for mono re
       git add .
       git commit -m "Add pipeline for projectA"
       ```
-1. Deploy the pipeline
+3. To deploy the pipeline for a subproject, git add, delete or update inside the subproject folder in the appdev repo
    ```
-   sam deploy -t codepipeline.yaml --stack-name projectA-pipeline --capabilities=CAPABILITY_IAM --profile cicd
+   git commit -a -m "update subproject file"
+   git push
    ```
-1. Activate the github connection
-   1. Go to your CI/CD account console
-   1. Got to [Developer tools settings](https://console.aws.amazon.com/codesuite/settings/connections) (if you don't see your connection, check the region you are in)
-1. push a new change modifying/creating anything in `projectA` 
-1. see it flow through the `projectA` pipeline in CI/CD account
+4. This will first create the pipeline, if one doesn't exist already for this subproject.  After that the pipeline will get triggered.
+5. If a pipeline already exists, then this will trigger the pipeline for this subproject.
 
 ## Setup new subproject
-
-```
-sam init projectX
-cd projectX
-sam pipeline init --bootstrap
-# Add Name to pipeline "projectX" and fix path to yamls 
-# Disable change detection #TODO
-sam deploy -t codepipeline.yaml --stack-name projectX-pipeline --capabilities=CAPABILITY_IAM --profile cicd
-```
-
+Add the subproject into the appdev repo.  git commit any changes and git push.
 
 # TODOs
-
 - [ ] Improve doc around what needs to be edited (codepipeline.yaml vs. folder names, trust relation ship, disable change detection)
-- [ ] Test entire procedure
-- [ ] Automatically disable change detection in codepipeline
-- [ ] Fix trust relationship https://github.com/aws/aws-sam-cli/issues/3857
-- [ ] Add common pipeline example
+- [ ] Fix trust relationship https://github.com/aws/aws-sam-cli/issues/3857 -- Please check the trust relationship in the prod account and ensure it has the correct account no. This is a one time task.
 

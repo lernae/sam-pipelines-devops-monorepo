@@ -7,9 +7,7 @@ s3_prefix = "pipeline-trigger"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
-# s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1hndhir8ozcp5"
 profile = "cicd"
 confirm_changeset = true
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-5uen4quafduw"
-# parameter_overrides = "PipelineName=\"projectX\" TestingPipelineExecutionRole=\"arn:aws:iam::357993141891:role/aws-sam-cli-managed-test-pip-PipelineExecutionRole-NKPM1BUMN4W\""
 parameter_overrides = "PipelineName=\"\" CodeStarConnectionArn=\"arn:aws:codestar-connections:us-east-1:357993141891:connection/73a76ee8-8501-41f5-b117-e351a1a65d2c\""
