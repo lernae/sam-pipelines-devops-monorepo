@@ -515,7 +515,5 @@ Add the subproject into the appdev repo.  git commit any changes and git push.
 ## Cleanup a pipeline during POC of this sample
 $ sam delete --stack-name <name_of_pipeline_CFN_stack>  --profile cicd
 
-# TODOs
-- [ ] Improve doc around what needs to be edited (codepipeline.yaml vs. folder names, trust relation ship, disable change detection)
-- [ ] Fix trust relationship https://github.com/aws/aws-sam-cli/issues/3857 -- Please check the trust relationship in the prod account and ensure it has the correct account no. This is a one time task.
-
+# Credit
+This repo is based off of the original sam pipelines monorepo https://github.com/flochaz/sam-pipelines-monorepo with modifications to adapt it to a 2 separate repo approach (one for app code and one for infra related resources)
