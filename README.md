@@ -382,118 +382,108 @@ dos2unix: converting file assume-role.sh to Unix format...
 3. Update your pipeline for Mono repo support.  For reference, check codepipeline.yaml.bkp file.
    1. Update `codepipeline.yaml`
       1. Under Parameters, add below params.  One is for the type of resource in the appdev repo and subfoldername is what we will use to name the pipeline. 
-```shell
-ResourceType:
-  Type: String
-  Description: The type of the resource
-  Default: "lambda"
-SubFolderName:
-  Type: String
-  Description: The sub project folder name
-  Default: ""
-```
-  1. Replace FullRepositoryId with "AppFullRepositoryId" as below:
-```shell 
-_AppFullRepositoryId:_
-  Type: String
-  Default: "<YOUR_ALIAS>/sam-pipelines-appdev-monorepo"
-DevOpsFullRepositoryId:
-  Type: String
-  Default: "<YOUR_ALIAS>/sam-pipelines-devops-monorepo"
-```
-     2. Update pipeline cloudformation template location:
-     ```
-     @@ -150,7 +151,7 @@ Resources:
-                    RoleArn: !GetAtt PipelineStackCloudFormationExecutionRole.Arn
-                    StackName: !Ref AWS::StackName
-                    ChangeSetName: !Sub ${AWS::StackName}-ChangeSet
-     -                TemplatePath: SourceCodeAsZip::codepipeline.yaml
-     +                TemplatePath: SourceCodeAsZip::projectA/codepipeline.yaml
-                    Capabilities: CAPABILITY_NAMED_IAM
-     ```
-   1. Add name for the pipeline under Properties for the Pipeline:
-```shell
-  Pipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      _+Name: !Ref SubFolderName_
-```
-   1. Replace 'Actions' inside Source Stage with below:
-```shell
-            - Name: SourceCodeRepoApp
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Provider: CodeStarSourceConnection
-                Version: "1"
-              Configuration:
-                ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
-                FullRepositoryId: !Ref AppFullRepositoryId
-                BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
-                DetectChanges: false
-              OutputArtifacts:
-                - Name: SourceCodeAsZipApp
-              RunOrder: 1
-            - Name: SourceCodeRepoDevOps
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Provider: CodeStarSourceConnection
-                Version: "1"
-              Configuration:
-                ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
-                FullRepositoryId: !Ref DevOpsFullRepositoryId
-                BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
-                DetectChanges: false
-              OutputArtifacts:
-                - Name: SourceCodeAsZipDevOps
-              RunOrder: 1
-```
-   1. Comment out "UpdatePipeline" and "ExecuteChangeSet" stages
-   2. Replace below inside BuildAndPackage stage:
-```shell
-                InputArtifacts:
-                  - Name: SourceCodeAsZip
-                OutputArtifacts:
-                  - Name: BuildArtifactAsZip
-```
+    ```shell
+    ResourceType:
+      Type: String
+      Description: The type of the resource
+      Default: "lambda"
+    SubFolderName:
+      Type: String
+      Description: The sub project folder name
+      Default: ""
+    ```
+      1. Replace FullRepositoryId as below (one for app and one for devops repo):
+    ```shell 
+    AppFullRepositoryId:
+      Type: String
+      Default: "<YOUR_ALIAS>/sam-pipelines-appdev-monorepo"
+    DevOpsFullRepositoryId:
+      Type: String
+      Default: "<YOUR_ALIAS>/sam-pipelines-devops-monorepo"
+    ```
+      1. Add name for the pipeline under Properties for the Pipeline:
+    ```shell
+      Pipeline:
+        Type: AWS::CodePipeline::Pipeline
+        Properties:
+          Name: !Ref SubFolderName
+    ```
+      1. Replace 'Actions' inside Source Stage with below:
+    ```shell
+                - Name: SourceCodeRepoApp
+                  ActionTypeId:
+                    Category: Source
+                    Owner: AWS
+                    Provider: CodeStarSourceConnection
+                    Version: "1"
+                  Configuration:
+                    ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
+                    FullRepositoryId: !Ref AppFullRepositoryId
+                    BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+                    DetectChanges: false
+                  OutputArtifacts:
+                    - Name: SourceCodeAsZipApp
+                  RunOrder: 1
+                - Name: SourceCodeRepoDevOps
+                  ActionTypeId:
+                    Category: Source
+                    Owner: AWS
+                    Provider: CodeStarSourceConnection
+                    Version: "1"
+                  Configuration:
+                    ConnectionArn: !If [CreateConnection, !Ref CodeStarConnection, !Ref CodeStarConnectionArn]
+                    FullRepositoryId: !Ref DevOpsFullRepositoryId
+                    BranchName: !If [IsFeatureBranchPipeline, !Ref FeatureGitBranch, !Ref MainGitBranch]
+                    DetectChanges: false
+                  OutputArtifacts:
+                    - Name: SourceCodeAsZipDevOps
+                  RunOrder: 1
+    ```
+      1. Comment out "UpdatePipeline" and "ExecuteChangeSet" stages
+      1. Replace below inside BuildAndPackage stage:
+    ```shell
+                    InputArtifacts:
+                      - Name: SourceCodeAsZip
+                    OutputArtifacts:
+                      - Name: BuildArtifactAsZip
+    ```
 with:
-```shell
-                  PrimarySource: SourceCodeAsZipDevOps
-                InputArtifacts:
-                  - Name: SourceCodeAsZipApp
-                  - Name: SourceCodeAsZipDevOps
-                OutputArtifacts:
-                  - Name: BuildArtifactAsZip
-```
-   1. Update DeployTest stage to include the following (InputArtifacts, PrimarySource, SubFolderName) and repeat this step for DeployProd stage:
-```shell
-                  ProjectName: !Ref CodeBuildProjectDeploy
-                  PrimarySource: SourceCodeAsZipDevOps
-                  EnvironmentVariables: !Sub |
-                    [
-                      {"name": "ENV_TEMPLATE", "value": "packaged-test.yaml"},
-                      {"name": "ENV_REGION", "value": "${TestingRegion}"},
-                      {"name": "ENV_STACK_NAME", "value": "${TestingStackName}"},
-                      {"name": "ENV_PIPELINE_EXECUTION_ROLE", "value": "${TestingPipelineExecutionRole}"},
-                      {"name": "ENV_CLOUDFORMATION_EXECUTION_ROLE", "value": "${TestingCloudFormationExecutionRole}"},
-                      {"name": "ENV_BUCKET", "value": "${TestingArtifactBucket}"},
-                      {"name": "ENV_SUB_FOLDER_NAME", "value": "${SubFolderName}"},
-                      {"name": "ENV_IMAGE_REPOSITORY", "value": "${TestingImageRepository}"}
-                    ]
-                InputArtifacts:
-                  - Name: BuildArtifactAsZip
-                  - Name: SourceCodeAsZipDevOps
-```
-   1. Update "CodeBuildProjectBuildAndDeployFeature" and "CodeBuildProjectBuildAndPackage" EnvironmentVariables to include:
-```shell
-          - Name: SUB_FOLDER_NAME
-            Value: !Ref SubFolderName
-```
-   1. Update buildspec files.  You can check the diff using `diff -r pipeline.bkp pipeline`
-```shell
- cp -r pipeline.bkp/* pipeline/
-```
+    ```shell
+                      PrimarySource: SourceCodeAsZipDevOps
+                    InputArtifacts:
+                      - Name: SourceCodeAsZipApp
+                      - Name: SourceCodeAsZipDevOps
+                    OutputArtifacts:
+                      - Name: BuildArtifactAsZip
+    ```
+      1. Update DeployTest stage to include the following (InputArtifacts, PrimarySource, SubFolderName) and repeat this step for DeployProd stage:
+    ```shell
+                      ProjectName: !Ref CodeBuildProjectDeploy
+                      PrimarySource: SourceCodeAsZipDevOps
+                      EnvironmentVariables: !Sub |
+                        [
+                          {"name": "ENV_TEMPLATE", "value": "packaged-test.yaml"},
+                          {"name": "ENV_REGION", "value": "${TestingRegion}"},
+                          {"name": "ENV_STACK_NAME", "value": "${TestingStackName}"},
+                          {"name": "ENV_PIPELINE_EXECUTION_ROLE", "value": "${TestingPipelineExecutionRole}"},
+                          {"name": "ENV_CLOUDFORMATION_EXECUTION_ROLE", "value": "${TestingCloudFormationExecutionRole}"},
+                          {"name": "ENV_BUCKET", "value": "${TestingArtifactBucket}"},
+                          {"name": "ENV_SUB_FOLDER_NAME", "value": "${SubFolderName}"},
+                          {"name": "ENV_IMAGE_REPOSITORY", "value": "${TestingImageRepository}"}
+                        ]
+                    InputArtifacts:
+                      - Name: BuildArtifactAsZip
+                      - Name: SourceCodeAsZipDevOps
+    ```
+      1. Update "CodeBuildProjectBuildAndDeployFeature" and "CodeBuildProjectBuildAndPackage" EnvironmentVariables to include:
+    ```shell
+              - Name: SUB_FOLDER_NAME
+                Value: !Ref SubFolderName
+    ```
+      1. Update buildspec files.  You can check the diff using `diff -r pipeline.bkp pipeline`
+    ```shell
+     cp -r pipeline.bkp/* pipeline/
+    ```
 After this step, feel free to remove pipeline.bkp folder and its contents as they are the same as pipeline folder now.
    2. Commit and push to git for the devops repo changes
       ```
