@@ -8,32 +8,31 @@ def lambda_handler(event, context):
     modifiedFiles = githubEventPayload["commits"][0]["modified"] or githubEventPayload["commits"][0]["added"] or githubEventPayload["commits"][0]["deleted"]
     print("modified files")
     print(modifiedFiles)
-    #full path
-    for filePath in modifiedFiles:
-        # Extract folder name
-        folderName = (filePath[:filePath.find("/")])
-        print(folderName)
-        break
+    # All folders containing modified files in this commit
+    folders = set(map(lambda s: (s[:s.find("/")]), modifiedFiles))
+    print(folders)
 
     client = codepipeline_client()
     #start the pipeline
-    if len(folderName)>0:
-        try:
-            response = client.get_pipeline(name=folderName)
-            folderFound = response['pipeline']['name']
-            print('found? ', folderFound)
-            client.start_pipeline_execution(name=folderName) # pipeline runs at first creation so no need to trigger this if creating it first time
-        except:
-            print('pipeline ', folderName, ' does not exist')
-            print('creating pipeline')
-            start_codebuild(projectName='create_pipeline',
-                            envVarList=[
-                                {
-                                    'name': 'ENV_PIPELINE_NAME',
-                                    'value': folderName,
-                                    'type': 'PLAINTEXT'
-                                }
-                            ])
+
+    if len(folders) > 0:
+        for folderName in folders:
+            try:
+                response = client.get_pipeline(name=folderName)
+                folderFound = response['pipeline']['name']
+                print('found? ', folderFound)
+                client.start_pipeline_execution(name=folderName) # pipeline runs at first creation so no need to trigger this if creating it first time
+            except:
+                print('pipeline ', folderName, ' does not exist')
+                print('creating pipeline')
+                start_codebuild(projectName='create_pipeline',
+                                envVarList=[
+                                    {
+                                        'name': 'ENV_PIPELINE_NAME',
+                                        'value': folderName,
+                                        'type': 'PLAINTEXT'
+                                    }
+                                ])
         return {
             'statusCode': 200,
             'body': json.dumps('Modified project in repo:' + folderName)
