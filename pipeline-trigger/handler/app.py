@@ -12,30 +12,33 @@ def lambda_handler(event, context):
     folders = set(map(lambda s: (s[:s.find("/")]), modifiedFiles))
     print(folders)
 
-    client = codepipeline_client()
-    #start the pipeline
-
     if len(folders) > 0:
-        for folderName in folders:
-            try:
-                response = client.get_pipeline(name=folderName)
-                folderFound = response['pipeline']['name']
-                print('found? ', folderFound)
-                client.start_pipeline_execution(name=folderName) # pipeline runs at first creation so no need to trigger this if creating it first time
-            except:
-                print('pipeline ', folderName, ' does not exist')
-                print('creating pipeline')
-                start_codebuild(projectName='create_pipeline',
-                                envVarList=[
-                                    {
-                                        'name': 'ENV_PIPELINE_NAME',
-                                        'value': folderName,
-                                        'type': 'PLAINTEXT'
-                                    }
-                                ])
+        client = codepipeline_client()
+        #start the pipeline
+        pipelines = client.list_pipelines()
+        pipelineNames = [p.name for p in pipelines]
+
+        pipelinesToCreate = list(set(folders) - set(pipelineNames))
+        pipelinesToStart = list(set(folders) - set(pipelinesToCreate))
+        for folderName in pipelinesToStart:
+            print('starting pipeline for ', folderName)
+            client.start_pipeline_execution(name=folderName)
+
+        for folderName in pipelinesToCreate:
+            print('pipeline ', folderName, ' does not exist')
+            print('creating pipeline')
+            start_codebuild(projectName='create_pipeline',
+                            envVarList=[
+                                {
+                                    'name': 'ENV_PIPELINE_NAME',
+                                    'value': folderName,
+                                    'type': 'PLAINTEXT'
+                                }
+                            ])
+
         return {
             'statusCode': 200,
-            'body': json.dumps('Modified project in repo:' + folderName)
+            'body': json.dumps('Modified project in repo:' + folders)
         }
     return {
         'statusCode': 200,
