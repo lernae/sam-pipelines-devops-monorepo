@@ -19,22 +19,33 @@ def lambda_handler(event, context):
         pipelineNames = [p.name for p in pipelines]
 
         pipelinesToCreate = list(set(folders) - set(pipelineNames))
+        print(pipelinesToCreate)
         pipelinesToStart = list(set(folders) - set(pipelinesToCreate))
+        print(pipelinesToStart)
         for folderName in pipelinesToStart:
             print('starting pipeline for ', folderName)
             client.start_pipeline_execution(name=folderName)
+            print('started pipeline for ', folderName)
 
+        cbclient = codebuild_client()
+        projectName='create_pipeline'
         for folderName in pipelinesToCreate:
             print('pipeline ', folderName, ' does not exist')
             print('creating pipeline')
-            start_codebuild(projectName='create_pipeline',
-                            envVarList=[
-                                {
-                                    'name': 'ENV_PIPELINE_NAME',
-                                    'value': folderName,
-                                    'type': 'PLAINTEXT'
-                                }
-                            ])
+            cbclient.start_build(projectName=projectName,
+                                 environmentVariablesOverride=[{
+                                        'name': 'ENV_PIPELINE_NAME',
+                                        'value': folderName,
+                                        'type': 'PLAINTEXT'
+                                }])
+            # start_codebuild(projectName='create_pipeline',
+            #                 envVarList=[
+            #                     {
+            #                         'name': 'ENV_PIPELINE_NAME',
+            #                         'value': folderName,
+            #                         'type': 'PLAINTEXT'
+            #                     }
+            #                 ])
 
         return {
             'statusCode': 200,
