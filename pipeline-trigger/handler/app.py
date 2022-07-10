@@ -52,7 +52,7 @@ def lambda_handler(event, context):
 
         return {
             'statusCode': 200,
-            'body': json.dumps('Modified project in repo:' + folders)
+            'body': json.dumps('Modified project in repo:')
         }
     return {
         'statusCode': 200,
