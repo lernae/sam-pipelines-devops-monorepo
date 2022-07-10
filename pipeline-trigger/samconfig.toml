@@ -10,4 +10,4 @@ image_repositories = []
 profile = "cicd"
 confirm_changeset = true
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-5uen4quafduw"
-parameter_overrides = "PipelineName=\"\" CodeStarConnectionArn=\"arn:aws:codestar-connections:us-east-1:586770803976:connection/de73e7c7-32f1-4988-8fdf-2f9b2a4bca2c\""
+parameter_overrides = "PipelineName=\"\" CodeStarConnectionArn=\"arn:aws:codestar-connections:us-east-1:357993141891:connection/b3212644-e747-40fc-845b-1ddbf4ed2abf\""

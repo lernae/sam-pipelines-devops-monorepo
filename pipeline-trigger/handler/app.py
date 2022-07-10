@@ -15,7 +15,8 @@ def lambda_handler(event, context):
     if len(folders) > 0:
         client = codepipeline_client()
         #start the pipeline
-        pipelines = client.list_pipelines()
+        resp = client.list_pipelines()
+        pipelines = resp['pipelines']
         pipelineNames = [p.name for p in pipelines]
 
         pipelinesToCreate = list(set(folders) - set(pipelineNames))
