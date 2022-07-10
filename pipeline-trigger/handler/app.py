@@ -16,8 +16,10 @@ def lambda_handler(event, context):
         client = codepipeline_client()
         #start the pipeline
         resp = client.list_pipelines()
+        print(rest)
         pipelines = resp['pipelines']
-        pipelineNames = [p.name for p in pipelines]
+        print(pipelines)
+        pipelineNames = [p['name'] for p in pipelines]
 
         pipelinesToCreate = list(set(folders) - set(pipelineNames))
         print(pipelinesToCreate)
