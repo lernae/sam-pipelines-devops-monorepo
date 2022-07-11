@@ -14,9 +14,7 @@ def lambda_handler(event, context):
 
     if len(folders) > 0:
         client = codepipeline_client()
-        #start the pipeline
         resp = client.list_pipelines()
-        print(resp)
         pipelines = resp['pipelines']
         print(pipelines)
         pipelineNames = [p['name'] for p in pipelines]
@@ -41,14 +39,6 @@ def lambda_handler(event, context):
                                         'value': folderName,
                                         'type': 'PLAINTEXT'
                                 }])
-            # start_codebuild(projectName='create_pipeline',
-            #                 envVarList=[
-            #                     {
-            #                         'name': 'ENV_PIPELINE_NAME',
-            #                         'value': folderName,
-            #                         'type': 'PLAINTEXT'
-            #                     }
-            #                 ])
 
         return {
             'statusCode': 200,
@@ -58,33 +48,6 @@ def lambda_handler(event, context):
         'statusCode': 200,
         'body': json.dumps('No modified project in repo')
     }
-
-
-def start_codebuild(projectName, envVarList):
-    print('starting codebuild ',projectName)
-    client = codebuild_client()
-    response = client.start_build(projectName=projectName, environmentVariablesOverride=envVarList)
-    print('start_build response ',response)
-    # Check for the status of the build
-    buildId = response['build']['id']
-    print('buildId ',buildId)
-    status = check_build_status(buildId)
-    return status
-
-
-def check_build_status(buildId):
-    import boto3
-    global cbclient
-    if not cbclient:
-        cbclient = boto3.client('codebuild')
-    status = "failed"
-    while status != "SUCCEEDED" and status != "FAILED":
-        response = cbclient.batch_get_builds(ids=[buildId])
-        status = response['builds'][0]['buildStatus']
-        print('build status ',status)
-        if status == "IN_PROGRESS":
-            time.sleep(5)
-    return status
 
 
 cpclient = None
