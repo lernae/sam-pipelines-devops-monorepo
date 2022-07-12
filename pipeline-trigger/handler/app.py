@@ -5,7 +5,7 @@ import time
 def lambda_handler(event, context):
     print(event)
     githubEventPayload=json.loads(event['body'])
-    modifiedFiles = githubEventPayload["commits"][0]["modified"] + githubEventPayload["commits"][0]["added"] + githubEventPayload["commits"][0]["deleted"]
+    modifiedFiles = githubEventPayload["commits"][0]["modified"] + githubEventPayload["commits"][0]["added"] + githubEventPayload["commits"][0]["removed"]
     print("modified files")
     print(modifiedFiles)
     # All folders containing modified files in this commit
