@@ -48,7 +48,7 @@ def lambda_handler(event, context):
                 }
     return {
         'statusCode': 200,
-        'body': json.dumps('No modified project in repo')
+        'body': json.dumps('No commits')
     }
 
 
