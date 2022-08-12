@@ -6,12 +6,20 @@ def lambda_handler(event, context):
     print(event)
     if 'body' in event:
         githubEventPayload=json.loads(event['body'])
-        if 'commits' in event['body']:
-            committedfiles = githubEventPayload["commits"][0]["modified"] + githubEventPayload["commits"][0]["added"] + githubEventPayload["commits"][0]["removed"]
+        if 'commits' in githubEventPayload and len(githubEventPayload['commits']) > 0:
+            curr_commit = githubEventPayload["commits"][0]
+            committed_files = []
+            if 'modified' in curr_commit:
+                committed_files += curr_commit["modified"] 
+            if 'added' in curr_commit:
+                committed_files += curr_commit["added"]
+            if 'removed' in curr_commit:
+                committed_files += curr_commit["removed"]
+                
             print("Files in commit")
-            print(committedfiles)
+            print(committed_files)
             # All folders containing modified files in this commit
-            folders = set(map(lambda s: (s[:s.find("/")]), committedfiles))
+            folders = set(map(lambda s: (s[:s.find("/")]), committed_files))
             print(folders)
 
             if len(folders) > 0:
